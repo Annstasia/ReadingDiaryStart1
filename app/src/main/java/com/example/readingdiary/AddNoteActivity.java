@@ -26,8 +26,6 @@ import com.example.readingdiary.data.OpenHelper;
 
 public class AddNoteActivity extends AppCompatActivity {
     SQLiteDatabase sdb;
-//    SQLiteDatabase sdb;
-
     OpenHelper dbHelper;
     public static final String DATABASE_NAME = "Literature";
     public static final String DATABASE_TABLE = "Notes";
@@ -43,13 +41,11 @@ public class AddNoteActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-//        Log.d("DATA", Environment.getDataDirectory().toString());
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_note);
         dbHelper = new OpenHelper(this);
         sdb = dbHelper.getWritableDatabase();
 
-        Log.d("DATA", Environment.getDataDirectory().toString());
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -73,21 +69,9 @@ public class AddNoteActivity extends AppCompatActivity {
         acceptAddingNote.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                sdb.execSQL("INSERT INTO " + OpenHelper.DATABASE_TABLE + "(" + OpenHelper.COLUMN_PATH + ", " +
-//                        OpenHelper.COLUMN_AUTHOR + ", " + OpenHelper.COLUMN_TITLE + ") " +
-//                        "VALUES (" + pathField.getText() + ", " + authorField.getText() + ", "
-//                        + titleField.getText() + ");"); // todo execute
-//                pathField.g
-                insert(pathField.getText().toString(), authorField.getText().toString(), titleField.getText().toString());
+                long id = insert(pathField.getText().toString(), authorField.getText().toString(), titleField.getText().toString());
                 Intent intent = new Intent(AddNoteActivity.this, NoteActivity.class);
-                intent.putExtra("title", titleField.getText().toString());
-                intent.putExtra("author", authorField.getText().toString());
-
-//                Bundle bundle = new Bundle();
-//
-//                bundle.putString("title", "title";
-//                bundle.putString("author", "sdfgh");
-
+                intent.putExtra("id", id);
                 startActivity(intent);
                 displayDatabaseInfo();
             }
@@ -100,34 +84,40 @@ public class AddNoteActivity extends AppCompatActivity {
     }
 
 
-    public void insert(String path, String author, String title) {
+    public long insert(String path, String author, String title) {
         sdb = dbHelper.getWritableDatabase();
-        String pathTokens [] = path.split("/");
         ContentValues cv=new ContentValues();
+        if (path.equals("") || path.equals("/")) path = "./";
+        else{
+            if (path.charAt(path.length() - 1) != '/'){
+                path = path + "/";
+            }
+            if (path.charAt(0) == '/'){
+                path = "." + path;
+            }
+            if (path.charAt(0) != '.'){
+                path = "./" + path;
+            }
+        }
+        String pathTokens[] = ((String) path).split("/");
+        String prev = pathTokens[0];
+        for (int i = 1; i < pathTokens.length; i++){
+            if (pathTokens[i].equals("")){
+                continue;
+            }
+            cv.put(PathTable.COLUMN_PARENT, prev);
+            cv.put(PathTable.COLUMN_CHILD, prev + "/" + pathTokens[i]);
+            sdb.insert(PathTable.TABLE_NAME, null, cv);
+            cv.clear();
+            prev = prev + "/" + pathTokens[i];
+        }
+//        String pathTokens [] = path.split("/");
+//        ContentValues cv=new ContentValues();
         cv.put(NoteTable.COLUMN_PATH, path);
         cv.put(NoteTable.COLUMN_AUTHOR, author);
         cv.put(NoteTable.COLUMN_TITLE, title);
-//        if (pathTokens[0] != ""){
-//            cv.put(NoteTable.COLUMN_DIRECTORY, pathTokens[pathTokens.length - 1]);
-//        }
-//        else{
-//            cv.put(NoteTable.COLUMN_DIRECTORY, null);
-////            cv.put(NoteTable.COLUMN_DIRECTORY, null);
-//        }
 
-        sdb.insert(NoteTable.TABLE_NAME, null, cv);
-        String prev = ".";
-        for (String s : path.split("/")){
-            if (s == ""){
-                continue;
-            }
-            cv.clear();
-            cv.put(PathTable.COLUMN_PARENT, prev);
-            cv.put(PathTable.COLUMN_CHILD, prev + "/" + s);
-            sdb.insert(PathTable.TABLE_NAME, null, cv);
-            prev = prev + "/" + s;
-        }
-
+        return sdb.insert(NoteTable.TABLE_NAME, null, cv);
 
     }
 

@@ -59,17 +59,32 @@ public class CatalogActivity extends AppCompatActivity {
         mAdapter.setOnItemClickListener(new RecyclerViewAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(int position) {
+                int type = notes.get(position).getItemType();
+                if (type == 0){
+                    RealNote realNote = (RealNote) notes.get(position);
+                    Intent intent = new Intent(CatalogActivity.this, NoteActivity.class);
+                    intent.putExtra("id", realNote.getID());
+                    startActivity(intent);
+                }
+                if (type == 1){
+                    Directory directory = (Directory) notes.get(position);
+                    parent = directory.getDirectory();
+                    notes.clear();
+                    selectAll();
+                    mAdapter.notifyDataSetChanged();
+                }
 //                Toast.makeText(this, "Hi" + position, Toast.LENGTH_LONG).show();
-                parent = notes.get(position).getPath();
-                notes.clear();
-                selectAll();
-                mAdapter.notifyDataSetChanged();
+//                parent = notes.get(position).getPath();
+//                notes.clear();
+//                selectAll();
+//                mAdapter.notifyDataSetChanged();
 
                 Toast.makeText(getApplicationContext(), "Hi" + position, Toast.LENGTH_LONG).show();
             }
         });
         Log.d("CATALOGN", "number" + notes.size());
         Log.d("CATALOGW", "setAdapter");
+
 
         FloatingActionButton addNote = (FloatingActionButton) findViewById(R.id.addNote);
         addNote.setOnClickListener(new View.OnClickListener() {
@@ -96,10 +111,12 @@ public class CatalogActivity extends AppCompatActivity {
         Cursor mCursor1 = sdb.query(LiteratureContract.PathTable.TABLE_NAME, projection1,
                 LiteratureContract.PathTable.COLUMN_PARENT + " = ?", new String[] {parent},
                 null, null, null);
+        int idColumnIndex1 = mCursor1.getColumnIndex(LiteratureContract.PathTable._ID);
         int childColumnIndex = mCursor1.getColumnIndex(LiteratureContract.PathTable.COLUMN_CHILD);
         while (mCursor1.moveToNext()){
+            long currentId = mCursor1.getLong(idColumnIndex1);
             String currentChild = mCursor1.getString(childColumnIndex);
-            notes.add(new Note(currentChild, null, null));
+            notes.add(new Directory(currentId, currentChild));
         }
 
 
@@ -109,29 +126,42 @@ public class CatalogActivity extends AppCompatActivity {
                 NoteTable.COLUMN_PATH,
                 NoteTable.COLUMN_AUTHOR,
                 NoteTable.COLUMN_TITLE
-//                NoteTable.COLUMN_DIRECTORY
         };
+
+
+
+        Log.d("CATALOGW", "okPath");
+//        Log.d("TESTXXX", "1");
 
         Cursor cursor = sdb.query(
                 NoteTable.TABLE_NAME,   // таблица
                 projection,            // столбцы
                 LiteratureContract.NoteTable.COLUMN_PATH + " = ?",                  // столбцы для условия WHERE
-                new String[] {parent},                  // значения для условия WHERE
+                new String[] {parent + "/"},                  // значения для условия WHERE
                 null,                  // Don't group the rows
                 null,                  // Don't filter by row groups
-                null);                   // порядок сортировки
-
+                null);
+        Log.d("TESTXXX1", parent);
+        // порядок сортировки
+        Log.d("CATALOGW", "okPath1");
         int idColumnIndex = cursor.getColumnIndex(NoteTable._ID);
         int pathColumnIndex = cursor.getColumnIndex(NoteTable.COLUMN_PATH);
         int authorColumnIndex = cursor.getColumnIndex(NoteTable.COLUMN_AUTHOR);
         int titleColumnIndex = cursor.getColumnIndex(NoteTable.COLUMN_TITLE);
+        Log.d("TESTXXX", "3" + cursor.getCount());
+        Log.d("CATALOGW", "okPath2");
         while (cursor.moveToNext()) {
+            Log.d("TESTXXX", "HI");
+            Log.d("CATALOGW", "okPath3");
             int currentID = cursor.getInt(idColumnIndex);
             String currentPath = cursor.getString(pathColumnIndex);
             String currentAuthor = cursor.getString(authorColumnIndex);
             String currentTitle = cursor.getString(titleColumnIndex);
-            notes.add(new Note(currentPath, currentAuthor, currentTitle));
+
+            notes.add(new RealNote(currentID, currentPath, currentAuthor, currentTitle));
+            Log.d("TESTXXX", currentPath);
         }
+        Log.d("CATALOGW", "okPath4" + parent);
 
         mCursor1.close();
         cursor.close();
