@@ -12,6 +12,8 @@ public final class LiteratureContract {
         public final static String COLUMN_PATH = "path";
         public final static String COLUMN_AUTHOR = "author";
         public final static String COLUMN_TITLE = "title";
+//        public final static String COLUMN_DIRECTORY = "directory";
+
 
 
     }

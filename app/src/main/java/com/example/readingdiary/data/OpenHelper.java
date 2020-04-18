@@ -40,7 +40,9 @@ public class OpenHelper extends SQLiteOpenHelper {
                 LiteratureContract.NoteTable._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 LiteratureContract.NoteTable.COLUMN_PATH + " TEXT, " +
                 LiteratureContract.NoteTable.COLUMN_AUTHOR + " TEXT, " +
-                LiteratureContract.NoteTable.COLUMN_TITLE + " TEXT" + ");";
+                LiteratureContract.NoteTable.COLUMN_TITLE + " TEXT" +
+//                NoteTable.COLUMN_DIRECTORY + " TEXT" +
+                 ");";
 //        String query1 = "CREATE TABLE " + GuestEntry.TABLE_NAME + " ("
 //                + HotelContract.GuestEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
 //                + GuestEntry.COLUMN_NAME + " TEXT NOT NULL, "
@@ -52,7 +54,7 @@ public class OpenHelper extends SQLiteOpenHelper {
         String query1 = "CREATE TABLE " + LiteratureContract.PathTable.TABLE_NAME + " (" +
                 LiteratureContract.PathTable._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 LiteratureContract.PathTable.COLUMN_PARENT + " TEXT, " +
-                LiteratureContract.PathTable.COLUMN_CHILD + " TEXT" + ");";
+                LiteratureContract.PathTable.COLUMN_CHILD + " TEXT UNIQUE" + ");";
         db.execSQL(query1);
 
     }

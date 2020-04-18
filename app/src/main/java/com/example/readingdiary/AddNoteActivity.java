@@ -2,6 +2,7 @@ package com.example.readingdiary;
 
 import android.app.Activity;
 import android.content.ContentValues;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -19,6 +20,8 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 import com.example.readingdiary.data.LiteratureContract.NoteTable;
+import com.example.readingdiary.data.LiteratureContract.PathTable;
+
 import com.example.readingdiary.data.OpenHelper;
 
 public class AddNoteActivity extends AppCompatActivity {
@@ -76,6 +79,16 @@ public class AddNoteActivity extends AppCompatActivity {
 //                        + titleField.getText() + ");"); // todo execute
 //                pathField.g
                 insert(pathField.getText().toString(), authorField.getText().toString(), titleField.getText().toString());
+                Intent intent = new Intent(AddNoteActivity.this, NoteActivity.class);
+                intent.putExtra("title", titleField.getText().toString());
+                intent.putExtra("author", authorField.getText().toString());
+
+//                Bundle bundle = new Bundle();
+//
+//                bundle.putString("title", "title";
+//                bundle.putString("author", "sdfgh");
+
+                startActivity(intent);
                 displayDatabaseInfo();
             }
         });
@@ -87,14 +100,35 @@ public class AddNoteActivity extends AppCompatActivity {
     }
 
 
-    public long insert(String path, String author, String title) {
+    public void insert(String path, String author, String title) {
         sdb = dbHelper.getWritableDatabase();
+        String pathTokens [] = path.split("/");
         ContentValues cv=new ContentValues();
         cv.put(NoteTable.COLUMN_PATH, path);
         cv.put(NoteTable.COLUMN_AUTHOR, author);
         cv.put(NoteTable.COLUMN_TITLE, title);
-//        sdb.close();
-        return sdb.insert(NoteTable.TABLE_NAME, null, cv);
+//        if (pathTokens[0] != ""){
+//            cv.put(NoteTable.COLUMN_DIRECTORY, pathTokens[pathTokens.length - 1]);
+//        }
+//        else{
+//            cv.put(NoteTable.COLUMN_DIRECTORY, null);
+////            cv.put(NoteTable.COLUMN_DIRECTORY, null);
+//        }
+
+        sdb.insert(NoteTable.TABLE_NAME, null, cv);
+        String prev = ".";
+        for (String s : path.split("/")){
+            if (s == ""){
+                continue;
+            }
+            cv.clear();
+            cv.put(PathTable.COLUMN_PARENT, prev);
+            cv.put(PathTable.COLUMN_CHILD, prev + "/" + s);
+            sdb.insert(PathTable.TABLE_NAME, null, cv);
+            prev = prev + "/" + s;
+        }
+
+
     }
 
 
@@ -109,7 +143,8 @@ public class AddNoteActivity extends AppCompatActivity {
                 NoteTable._ID,
                 NoteTable.COLUMN_PATH,
                 NoteTable.COLUMN_AUTHOR,
-                NoteTable.COLUMN_TITLE,
+                NoteTable.COLUMN_TITLE
+//                NoteTable.COLUMN_DIRECTORY
         };
         // Делаем запрос
         Cursor cursor = db.query(
@@ -120,6 +155,25 @@ public class AddNoteActivity extends AppCompatActivity {
                 null,                  // Don't group the rows
                 null,                  // Don't filter by row groups
                 null);                   // порядок сортировки
+
+
+        String[] projection1 = {
+                PathTable._ID,
+                PathTable.COLUMN_PARENT,
+                PathTable.COLUMN_CHILD
+        };
+        // Делаем запрос
+        Cursor cursor1 = db.query(
+                PathTable.TABLE_NAME,   // таблица
+                projection1,            // столбцы
+                null,                  // столбцы для условия WHERE
+                null,                  // значения для условия WHERE
+                null,                  // Don't group the rows
+                null,                  // Don't filter by row groups
+                null);                   // порядок сортировки
+
+
+
         TextView displayTextView = (TextView) findViewById(R.id.text_view_info);
 
         try {
@@ -128,13 +182,16 @@ public class AddNoteActivity extends AppCompatActivity {
                     NoteTable._ID  + " - " +
                             NoteTable.COLUMN_PATH  + " - " +
                             NoteTable.COLUMN_AUTHOR  + " - " +
-                            NoteTable.COLUMN_TITLE  + "\n");
+                            NoteTable.COLUMN_TITLE  + " - "
+//                            + //                            NoteTable.COLUMN_DIRECTORY
+                            + "\n");
 
             // Узнаем индекс каждого столбца
             int idColumnIndex = cursor.getColumnIndex(NoteTable._ID);
             int pathColumnIndex = cursor.getColumnIndex(NoteTable.COLUMN_PATH);
             int authorColumnIndex = cursor.getColumnIndex(NoteTable.COLUMN_AUTHOR);
             int titleColumnIndex = cursor.getColumnIndex(NoteTable.COLUMN_TITLE);
+//            int directoryColumnIndex = cursor.getColumnIndex(NoteTable.COLUMN_DIRECTORY);
 
             // Проходим через все ряды
             while (cursor.moveToNext()) {
@@ -143,16 +200,46 @@ public class AddNoteActivity extends AppCompatActivity {
                 String currentPath = cursor.getString(pathColumnIndex);
                 String currentAuthor = cursor.getString(authorColumnIndex);
                 String currentTitle = cursor.getString(titleColumnIndex);
+//                String currentDirectory = cursor.getString(directoryColumnIndex);
+
 
                 // Выводим значения каждого столбца
                 displayTextView.append(("\n" + currentID + " - " +
                         currentPath + " - " +
                         currentAuthor + " - " +
-                        currentTitle));
+                        currentTitle + " - "
+//                        + currentDirectory
+                ));
             }
+
+            displayTextView.append(
+                    PathTable._ID  + " - " +
+                            PathTable.COLUMN_PARENT  + " - " +
+                            PathTable.COLUMN_CHILD  + "\n");
+
+            idColumnIndex = cursor1.getColumnIndex(PathTable._ID);
+            int parentColumnIndex = cursor1.getColumnIndex(PathTable.COLUMN_PARENT);
+            int childColumnIndex = cursor1.getColumnIndex(PathTable.COLUMN_CHILD);
+
+            while (cursor1.moveToNext()) {
+                // Используем индекс для получения строки или числа
+                int currentID = cursor1.getInt(idColumnIndex);
+                String currentParent = cursor1.getString(parentColumnIndex);
+                String currentChild = cursor1.getString(childColumnIndex);
+
+                // Выводим значения каждого столбца
+                displayTextView.append("\n" + currentID + " - " +
+                        currentParent + " - " +
+                        currentChild);
+            }
+
+
+
+
         } finally {
             // Всегда закрываем курсор после чтения
             cursor.close();
+            cursor1.close();
         }
     }
 
