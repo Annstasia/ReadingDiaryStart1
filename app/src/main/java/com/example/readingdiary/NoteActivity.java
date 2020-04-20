@@ -2,6 +2,7 @@ package com.example.readingdiary;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.icu.text.CaseMap;
@@ -13,12 +14,16 @@ import com.example.readingdiary.data.OpenHelper;
 
 import android.util.Log;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class NoteActivity extends AppCompatActivity {
     TextView titleNoteActivity;
     TextView authorNoteActivity;
     SQLiteDatabase sdb;
     OpenHelper dbHelper;
+    String id;
+    String path;
+    boolean change = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,9 +33,8 @@ public class NoteActivity extends AppCompatActivity {
         sdb = dbHelper.getReadableDatabase();
         titleNoteActivity = (TextView) findViewById(R.id.titleNoteActivity);
         authorNoteActivity = (TextView) findViewById(R.id.authorNoteActivity);
-
         Bundle args = getIntent().getExtras();
-        String id = args.get("id").toString();
+        id = args.get("id").toString();
         select(id);
 
 
@@ -65,6 +69,7 @@ public class NoteActivity extends AppCompatActivity {
                 String currentTitle = cursor.getString(titleColumnIndex);
                 authorNoteActivity.setText(currentAuthor);
                 titleNoteActivity.setText(currentTitle);
+                path = currentPath;
             }
         }
         finally{
@@ -72,4 +77,15 @@ public class NoteActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (change){
+            Intent returnIntent = new Intent();
+            returnIntent.putExtra("path", path);
+            setResult(RESULT_OK, returnIntent);
+        }
+        Toast.makeText(getApplicationContext(), "Destroy", Toast.LENGTH_LONG).show();
+        Log.d("ONDESTROY", "onDestroy");
+    }
 }

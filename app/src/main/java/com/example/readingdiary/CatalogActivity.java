@@ -1,5 +1,6 @@
 package com.example.readingdiary;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -25,37 +26,23 @@ public class CatalogActivity extends AppCompatActivity {
     OpenHelper dbHelper;
     RecyclerViewAdapter mAdapter;
     SQLiteDatabase sdb;
-    String parent = ".";
+    String parent = "./";
     List<Note> notes;
     List<String> directories;
+    RecyclerView recyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
 
-
         setContentView(R.layout.activity_catalog);
-
-        Log.d("CATALOGW", "create");
         dbHelper = new OpenHelper(this);
-        Log.d("CATALOGW", "create0");
         sdb = dbHelper.getReadableDatabase();
-        Log.d("CATALOGW", "create02");
         notes = new ArrayList<Note>();
-
-        Log.d("CATALOGW", "create1");
-
+        recyclerView = (RecyclerView) findViewById(R.id.recyclerViewCatalog);
+        createRecyclerView();
         selectAll();
-
-        final RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recyclerViewCatalog);
-        mAdapter = new RecyclerViewAdapter(notes);
-
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-        RecyclerView.ItemAnimator itemAnimator = new DefaultItemAnimator();
-        recyclerView.setAdapter(mAdapter);
-        recyclerView.setLayoutManager(layoutManager);
-        recyclerView.setItemAnimator(itemAnimator);
         mAdapter.setOnItemClickListener(new RecyclerViewAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(int position) {
@@ -64,7 +51,7 @@ public class CatalogActivity extends AppCompatActivity {
                     RealNote realNote = (RealNote) notes.get(position);
                     Intent intent = new Intent(CatalogActivity.this, NoteActivity.class);
                     intent.putExtra("id", realNote.getID());
-                    startActivity(intent);
+                    startActivityForResult(intent, 12345);
                 }
                 if (type == 1){
                     Directory directory = (Directory) notes.get(position);
@@ -82,16 +69,12 @@ public class CatalogActivity extends AppCompatActivity {
                 Toast.makeText(getApplicationContext(), "Hi" + position, Toast.LENGTH_LONG).show();
             }
         });
-        Log.d("CATALOGN", "number" + notes.size());
-        Log.d("CATALOGW", "setAdapter");
-
-
         FloatingActionButton addNote = (FloatingActionButton) findViewById(R.id.addNote);
         addNote.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(CatalogActivity.this, AddNoteActivity.class);
-                startActivity(intent);
+                startActivityForResult(intent, 12346);
             }
         });
 
@@ -107,7 +90,7 @@ public class CatalogActivity extends AppCompatActivity {
                 LiteratureContract.PathTable.COLUMN_CHILD
 
         };
-        String[] where = {parent};
+//        String[] where = {parent};
         Cursor mCursor1 = sdb.query(LiteratureContract.PathTable.TABLE_NAME, projection1,
                 LiteratureContract.PathTable.COLUMN_PARENT + " = ?", new String[] {parent},
                 null, null, null);
@@ -118,92 +101,63 @@ public class CatalogActivity extends AppCompatActivity {
             String currentChild = mCursor1.getString(childColumnIndex);
             notes.add(new Directory(currentId, currentChild));
         }
-
-
-
         String[] projection = {
                 NoteTable._ID,
                 NoteTable.COLUMN_PATH,
                 NoteTable.COLUMN_AUTHOR,
                 NoteTable.COLUMN_TITLE
         };
-
-
-
-        Log.d("CATALOGW", "okPath");
-//        Log.d("TESTXXX", "1");
-
         Cursor cursor = sdb.query(
                 NoteTable.TABLE_NAME,   // таблица
                 projection,            // столбцы
                 LiteratureContract.NoteTable.COLUMN_PATH + " = ?",                  // столбцы для условия WHERE
-                new String[] {parent + "/"},                  // значения для условия WHERE
+                new String[] {parent},                  // значения для условия WHERE
                 null,                  // Don't group the rows
                 null,                  // Don't filter by row groups
                 null);
-        Log.d("TESTXXX1", parent);
-        // порядок сортировки
-        Log.d("CATALOGW", "okPath1");
+
         int idColumnIndex = cursor.getColumnIndex(NoteTable._ID);
         int pathColumnIndex = cursor.getColumnIndex(NoteTable.COLUMN_PATH);
         int authorColumnIndex = cursor.getColumnIndex(NoteTable.COLUMN_AUTHOR);
         int titleColumnIndex = cursor.getColumnIndex(NoteTable.COLUMN_TITLE);
-        Log.d("TESTXXX", "3" + cursor.getCount());
-        Log.d("CATALOGW", "okPath2");
         while (cursor.moveToNext()) {
-            Log.d("TESTXXX", "HI");
-            Log.d("CATALOGW", "okPath3");
             int currentID = cursor.getInt(idColumnIndex);
             String currentPath = cursor.getString(pathColumnIndex);
             String currentAuthor = cursor.getString(authorColumnIndex);
             String currentTitle = cursor.getString(titleColumnIndex);
-
             notes.add(new RealNote(currentID, currentPath, currentAuthor, currentTitle));
-            Log.d("TESTXXX", currentPath);
         }
-        Log.d("CATALOGW", "okPath4" + parent);
-
         mCursor1.close();
         cursor.close();
 
+    }
 
+    protected void createRecyclerView(){
+        mAdapter = new RecyclerViewAdapter(notes);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        RecyclerView.ItemAnimator itemAnimator = new DefaultItemAnimator();
+        recyclerView.setAdapter(mAdapter);
+        recyclerView.setLayoutManager(layoutManager);
+        recyclerView.setItemAnimator(itemAnimator);
+    }
 
+    protected void reloadRecyclerView(){
+        notes.clear();
+        selectAll();
+        mAdapter.notifyDataSetChanged();
+    }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        Log.d("IDPARENT", "NOPARENT");
+        if (data.getExtras().get("path") != null){
+            parent = data.getExtras().get("path").toString();
 
+            Log.d("IDPARENT", "!!!!" + parent);
+            reloadRecyclerView();
+        }
 
-
-//
-//        sdb = dbHelper.getReadableDatabase();
-//        String[] projection = {
-//                NoteTable.COLUMN_PATH,
-//                NoteTable.COLUMN_AUTHOR,
-//                NoteTable.COLUMN_TITLE,
-//                NoteTable.COLUMN_DIRECTORY
-//        };
-//        Log.d("CATALOGW", "select1");
-//
-//        Cursor mCursor = sdb.query(NoteTable.TABLE_NAME, projection, null, null, null, null,
-//                null);
-//        Log.d("CATALOGW", "select2");
-//
-//        int pathColumnIndex = mCursor.getColumnIndex(NoteTable.COLUMN_PATH);
-//        int authorColumnIndex = mCursor.getColumnIndex(NoteTable.COLUMN_AUTHOR);
-//        int titleColumnIndex = mCursor.getColumnIndex(NoteTable.COLUMN_TITLE);
-//        int titleColumnDirectory = mCursor.getColumnIndex(NoteTable.COLUMN_DIRECTORY);
-//
-//        while (mCursor.moveToNext()){
-//            String currentPath = mCursor.getString(pathColumnIndex);
-//            String currentAuthor = mCursor.getString(authorColumnIndex);
-//            String currentTitle = mCursor.getString(titleColumnIndex);
-//            String currentDirectory = mCursor.getString(titleColumnDirectory);
-//
-//            Log.d("CATALOGW", "select3" + currentPath);
-//            notes.add(new Note(currentPath, currentAuthor, currentTitle));
-//            Log.d("CATALOGW", "select3" + currentPath);
-//        }
-//        mCursor.close();
-
-//        sdb.close();
     }
 
 

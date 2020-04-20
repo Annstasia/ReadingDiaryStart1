@@ -11,6 +11,7 @@ import com.example.readingdiary.data.LiteratureContract;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
@@ -38,6 +39,7 @@ public class AddNoteActivity extends AppCompatActivity {
     public static final int NUM_COLUMN_TITLE = 3;
     public static final int NUM_COLUMN_AUTHOR = 2;
     public static final int NUM_COLUMN_PATH = 1;
+    public String path;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,7 +62,7 @@ public class AddNoteActivity extends AppCompatActivity {
         cancelAddingNote.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                Intent returnIntent = new Intent();
                 closeActivity();
 
             }
@@ -69,11 +71,18 @@ public class AddNoteActivity extends AppCompatActivity {
         acceptAddingNote.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                long id = insert(pathField.getText().toString(), authorField.getText().toString(), titleField.getText().toString());
+                path = pathField.getText().toString();
+                fixPath();
+                long id = insert(path, authorField.getText().toString(), titleField.getText().toString());
                 Intent intent = new Intent(AddNoteActivity.this, NoteActivity.class);
                 intent.putExtra("id", id);
                 startActivity(intent);
                 displayDatabaseInfo();
+                Intent returnIntent = new Intent();
+                returnIntent.putExtra("path", path);
+                setResult(RESULT_OK, returnIntent);
+                Log.d("IDPARENT", "setting");
+                closeActivity();
             }
         });
 
@@ -100,19 +109,21 @@ public class AddNoteActivity extends AppCompatActivity {
             }
         }
         String pathTokens[] = ((String) path).split("/");
-        String prev = pathTokens[0];
+        String prev = pathTokens[0] + "/";
         for (int i = 1; i < pathTokens.length; i++){
             if (pathTokens[i].equals("")){
                 continue;
             }
             cv.put(PathTable.COLUMN_PARENT, prev);
-            cv.put(PathTable.COLUMN_CHILD, prev + "/" + pathTokens[i]);
+            prev = prev + pathTokens[i] + "/";
+            cv.put(PathTable.COLUMN_CHILD, prev);
             sdb.insert(PathTable.TABLE_NAME, null, cv);
             cv.clear();
-            prev = prev + "/" + pathTokens[i];
+
         }
 //        String pathTokens [] = path.split("/");
 //        ContentValues cv=new ContentValues();
+        Log.d("PATH", path);
         cv.put(NoteTable.COLUMN_PATH, path);
         cv.put(NoteTable.COLUMN_AUTHOR, author);
         cv.put(NoteTable.COLUMN_TITLE, title);
@@ -121,6 +132,21 @@ public class AddNoteActivity extends AppCompatActivity {
 
     }
 
+
+    public void fixPath(){
+        if (path.equals("") || path.equals("/")) path = "./";
+        else{
+            if (path.charAt(path.length() - 1) != '/'){
+                path = path + "/";
+            }
+            if (path.charAt(0) == '/'){
+                path = "." + path;
+            }
+            if (path.charAt(0) != '.'){
+                path = "./" + path;
+            }
+        }
+    }
 
     private void displayDatabaseInfo() {
 
@@ -232,5 +258,10 @@ public class AddNoteActivity extends AppCompatActivity {
             cursor1.close();
         }
     }
-
+//
+//    @Override
+//    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+//        super.onActivityResult(requestCode, resultCode, data);
+//
+//    }
 }
