@@ -28,8 +28,11 @@ public class CatalogActivity extends AppCompatActivity {
     SQLiteDatabase sdb;
     String parent = "./";
     List<Note> notes;
+    List<String> buttons;
     List<String> directories;
     RecyclerView recyclerView;
+    RecyclerView buttonView;
+    CatalogButtonAdapter buttonAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,9 +43,13 @@ public class CatalogActivity extends AppCompatActivity {
         dbHelper = new OpenHelper(this);
         sdb = dbHelper.getReadableDatabase();
         notes = new ArrayList<Note>();
+        buttons = new ArrayList<String>();
+        buttons.add(parent);
+
         recyclerView = (RecyclerView) findViewById(R.id.recyclerViewCatalog);
-        createRecyclerView();
+        buttonView = (RecyclerView) findViewById(R.id.buttonViewCatalog);
         selectAll();
+        createRecyclerView();
         mAdapter.setOnItemClickListener(new RecyclerViewAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(int position) {
@@ -57,16 +64,37 @@ public class CatalogActivity extends AppCompatActivity {
                     Directory directory = (Directory) notes.get(position);
                     parent = directory.getDirectory();
                     notes.clear();
+                    buttons.add(parent);
+                    Log.d("parentz", parent);
+                    buttonAdapter.notifyDataSetChanged();
                     selectAll();
                     mAdapter.notifyDataSetChanged();
                 }
-//                Toast.makeText(this, "Hi" + position, Toast.LENGTH_LONG).show();
-//                parent = notes.get(position).getPath();
-//                notes.clear();
-//                selectAll();
-//                mAdapter.notifyDataSetChanged();
-
                 Toast.makeText(getApplicationContext(), "Hi" + position, Toast.LENGTH_LONG).show();
+            }
+        });
+
+        buttonAdapter.setOnItemClickListener(new CatalogButtonAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(int position) {
+                for (String str : buttons){
+                    Log.d("parentz1", str);
+                }
+                parent = buttons.get(position);
+                reloadButtonsView();
+////                List<String> helpButton = buttons.subList(0, position + 1);
+////                buttons = buttons.subList(0, position + 1);
+//                buttons.clear();
+//                buttons = helpButton;
+//                Log.d("POSITION", ""+  position);
+//                buttonAdapter.notifyDataSetChanged();
+//                for (String str : buttons){
+//                    Log.d("parentz0", str);
+//                }
+//                Log.d("POSITION", ""+  position + "." + parent);
+                reloadRecyclerView();
+
+
             }
         });
         FloatingActionButton addNote = (FloatingActionButton) findViewById(R.id.addNote);
@@ -83,6 +111,7 @@ public class CatalogActivity extends AppCompatActivity {
 
 
     public void selectAll() {
+
         sdb = dbHelper.getReadableDatabase();
         String[] projection1 = {
                 LiteratureContract.PathTable._ID,
@@ -139,12 +168,36 @@ public class CatalogActivity extends AppCompatActivity {
         recyclerView.setAdapter(mAdapter);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setItemAnimator(itemAnimator);
+
+        buttonAdapter = new CatalogButtonAdapter(buttons);
+        LinearLayoutManager layoutManager1 = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
+        RecyclerView.ItemAnimator itemAnimator1 = new DefaultItemAnimator();
+        buttonView.setAdapter(buttonAdapter);
+        buttonView.setLayoutManager(layoutManager1);
+        buttonView.setItemAnimator(itemAnimator1);
+
     }
 
     protected void reloadRecyclerView(){
         notes.clear();
+//        buttons.clear();
         selectAll();
         mAdapter.notifyDataSetChanged();
+    }
+
+    protected void reloadButtonsView(){
+        buttons.clear();
+        String pathTokens[] = (parent).split("/");
+        Log.d("PATHQ", parent);
+        String prev = "";
+        for (int i = 0; i < pathTokens.length; i++){
+            if (pathTokens[i].equals("")){
+                continue;
+            }
+            prev = prev + pathTokens[i] + "/";
+            buttons.add(prev);
+        }
+        buttonAdapter.notifyDataSetChanged();
     }
 
     @Override
@@ -156,6 +209,7 @@ public class CatalogActivity extends AppCompatActivity {
 
             Log.d("IDPARENT", "!!!!" + parent);
             reloadRecyclerView();
+            reloadButtonsView();
         }
 
     }

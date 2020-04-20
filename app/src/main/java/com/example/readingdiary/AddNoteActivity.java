@@ -96,18 +96,18 @@ public class AddNoteActivity extends AppCompatActivity {
     public long insert(String path, String author, String title) {
         sdb = dbHelper.getWritableDatabase();
         ContentValues cv=new ContentValues();
-        if (path.equals("") || path.equals("/")) path = "./";
-        else{
-            if (path.charAt(path.length() - 1) != '/'){
-                path = path + "/";
-            }
-            if (path.charAt(0) == '/'){
-                path = "." + path;
-            }
-            if (path.charAt(0) != '.'){
-                path = "./" + path;
-            }
-        }
+//        if (path.equals("") || path.equals("/")) path = "./";
+//        else{
+//            if (path.charAt(path.length() - 1) != '/'){
+//                path = path + "/";
+//            }
+//            if (path.charAt(0) == '/'){
+//                path = "." + path;
+//            }
+//            if (path.charAt(0) != '.'){
+//                path = "./" + path;
+//            }
+//        }
         String pathTokens[] = ((String) path).split("/");
         String prev = pathTokens[0] + "/";
         for (int i = 1; i < pathTokens.length; i++){
