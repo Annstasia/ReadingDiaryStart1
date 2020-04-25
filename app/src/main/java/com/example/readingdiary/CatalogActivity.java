@@ -203,8 +203,8 @@ public class CatalogActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        Log.d("IDPARENT", "NOPARENT");
-        if (data.getExtras().get("path") != null){
+//        Log.d("IDPARENT", "NOPARENT" + (data.getExtras().get("path")==null));
+        if (data != null && data.getExtras().get("path") != null){
             parent = data.getExtras().get("path").toString();
 
             Log.d("IDPARENT", "!!!!" + parent);
