@@ -90,88 +90,89 @@ public class NoteActivity extends AppCompatActivity {
         pickImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                Intent intent = new Intent(NoteActivity.this, GaleryActivity.class);
-//                startActivity(intent);
-                Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
-                photoPickerIntent.setType("image/*");
-                startActivityForResult(photoPickerIntent, Pick_image);
+                Intent intent = new Intent(NoteActivity.this, GaleryActivity.class);
+                intent.putExtra("id", id);
+                startActivity(intent);
+//                Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
+//                photoPickerIntent.setType("image/*");
+//                startActivityForResult(photoPickerIntent, Pick_image);
             }
         });
 
 
     }
 
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent imageReturnedIntent) {
-        super.onActivityResult(requestCode, resultCode, imageReturnedIntent);
-
-        switch(requestCode) {
-            case Pick_image:
-                if(resultCode == RESULT_OK){
-                    try {
-
-                        //Получаем URI изображения, преобразуем его в Bitmap
-                        //объект и отображаем в элементе ImageView нашего интерфейса:
-                        final Uri imageUri = imageReturnedIntent.getData();
-                        final InputStream imageStream = getContentResolver().openInputStream(imageUri);
-                        final Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);
-
-                        File folder = new File(Environment.getExternalStorageDirectory() + "/images");
-                        boolean success = true;
-                        if (!folder.exists()) {
-                            success = folder.mkdir();
-                        }
-                        File folder1 = new File(folder + "/id");
-                        if (!folder1.exists()) {
-                            success = folder1.mkdir();
-                        }
-                        File imageFile;
-                        try{
-                            Log.d("IMAGE1", "start");
-                            imageFile = new File(folder1, "1.png");
-                            if (!imageFile.exists()){
-                                Log.d("IMAGE1", "start1");
-                                imageFile.mkdir();
-                                Log.d("IMAGE1", "start2");
-                                imageFile.createNewFile();
-                                Log.d("IMAGE1", "start3");
-                            }
-                            Log.d("IMAGE1", "save0");
-                            Log.d("IMAGE1", "save1" + imageFile.getAbsolutePath());
-
-
-                            if (!imageFile.exists()){
-                                FileOutputStream out = new FileOutputStream(imageFile);
-//                                selectedImage.compress(Bitmap.CompressFormat.PNG, 100, out);
-                                Log.d("IMAGE1", "save");
-//                                out.write()
-                                out.flush();
-                                out.close();
-                            }
-
-//                            imageView.setImageDrawable(Drawable.createFromPath(imageFile.getAbsolutePath()));
 //
-
-                        }
-                        catch (Exception e){
-                            Log.e("input", e.toString());
-                        }
-
-//                        imageView.setImageDrawable(Drawable.createFromPath(imageFile.getAbsolutePath()));
-
-
-
-
-//                        imageView.setImageBitmap(selectedImage);
-
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
-                    }
-                }
-        }
-    }
-
+//    @Override
+//    protected void onActivityResult(int requestCode, int resultCode, Intent imageReturnedIntent) {
+//        super.onActivityResult(requestCode, resultCode, imageReturnedIntent);
+//
+//        switch(requestCode) {
+//            case Pick_image:
+//                if(resultCode == RESULT_OK){
+//                    try {
+//
+//                        //Получаем URI изображения, преобразуем его в Bitmap
+//                        //объект и отображаем в элементе ImageView нашего интерфейса:
+//                        final Uri imageUri = imageReturnedIntent.getData();
+//                        final InputStream imageStream = getContentResolver().openInputStream(imageUri);
+//                        final Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);
+//
+//                        File folder = new File(Environment.getExternalStorageDirectory() + "/images");
+//                        boolean success = true;
+//                        if (!folder.exists()) {
+//                            success = folder.mkdir();
+//                        }
+//                        File folder1 = new File(folder + "/id");
+//                        if (!folder1.exists()) {
+//                            success = folder1.mkdir();
+//                        }
+//                        File imageFile;
+//                        try{
+//                            Log.d("IMAGE1", "start");
+//                            imageFile = new File(folder1, "1.png");
+//                            if (!imageFile.exists()){
+//                                Log.d("IMAGE1", "start1");
+//                                imageFile.mkdir();
+//                                Log.d("IMAGE1", "start2");
+//                                imageFile.createNewFile();
+//                                Log.d("IMAGE1", "start3");
+//                            }
+//                            Log.d("IMAGE1", "save0");
+//                            Log.d("IMAGE1", "save1" + imageFile.getAbsolutePath());
+//
+//
+//                            if (!imageFile.exists()){
+//                                FileOutputStream out = new FileOutputStream(imageFile);
+////                                selectedImage.compress(Bitmap.CompressFormat.PNG, 100, out);
+//                                Log.d("IMAGE1", "save");
+////                                out.write()
+//                                out.flush();
+//                                out.close();
+//                            }
+//
+////                            imageView.setImageDrawable(Drawable.createFromPath(imageFile.getAbsolutePath()));
+////
+//
+//                        }
+//                        catch (Exception e){
+//                            Log.e("input", e.toString());
+//                        }
+//
+////                        imageView.setImageDrawable(Drawable.createFromPath(imageFile.getAbsolutePath()));
+//
+//
+//
+//
+////                        imageView.setImageBitmap(selectedImage);
+//
+//                    } catch (FileNotFoundException e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//        }
+//    }
+//
 
     public void select(String id){
 

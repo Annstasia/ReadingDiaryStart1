@@ -40,7 +40,10 @@ public class OpenHelper extends SQLiteOpenHelper {
                 LiteratureContract.NoteTable._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 LiteratureContract.NoteTable.COLUMN_PATH + " TEXT, " +
                 LiteratureContract.NoteTable.COLUMN_AUTHOR + " TEXT, " +
-                LiteratureContract.NoteTable.COLUMN_TITLE + " TEXT" +
+                LiteratureContract.NoteTable.COLUMN_TITLE + " TEXT," +
+                NoteTable.COLUMN_LAST_IMAGE + " INTEGER" +
+                NoteTable.COLUMN_TITLE_IMAGE + " INTEGER" +
+
 //                NoteTable.COLUMN_DIRECTORY + " TEXT" +
                  ");";
 //        String query1 = "CREATE TABLE " + GuestEntry.TABLE_NAME + " ("

@@ -25,6 +25,8 @@ import com.example.readingdiary.data.LiteratureContract.PathTable;
 
 import com.example.readingdiary.data.OpenHelper;
 
+import java.io.File;
+
 public class AddNoteActivity extends AppCompatActivity {
     SQLiteDatabase sdb;
     OpenHelper dbHelper;
@@ -74,6 +76,9 @@ public class AddNoteActivity extends AppCompatActivity {
                 path = pathField.getText().toString();
                 fixPath();
                 long id = insert(path, authorField.getText().toString(), titleField.getText().toString());
+//                new File("/images/" + id).mkdirs();
+                Log.d("FILE2", getApplicationContext().getExternalFilesDir("/images").getAbsolutePath());
+
                 Intent intent = new Intent(AddNoteActivity.this, NoteActivity.class);
                 intent.putExtra("id", id);
                 startActivity(intent);
@@ -96,18 +101,6 @@ public class AddNoteActivity extends AppCompatActivity {
     public long insert(String path, String author, String title) {
         sdb = dbHelper.getWritableDatabase();
         ContentValues cv=new ContentValues();
-//        if (path.equals("") || path.equals("/")) path = "./";
-//        else{
-//            if (path.charAt(path.length() - 1) != '/'){
-//                path = path + "/";
-//            }
-//            if (path.charAt(0) == '/'){
-//                path = "." + path;
-//            }
-//            if (path.charAt(0) != '.'){
-//                path = "./" + path;
-//            }
-//        }
         String pathTokens[] = ((String) path).split("/");
         String prev = pathTokens[0] + "/";
         for (int i = 1; i < pathTokens.length; i++){
@@ -121,8 +114,6 @@ public class AddNoteActivity extends AppCompatActivity {
             cv.clear();
 
         }
-//        String pathTokens [] = path.split("/");
-//        ContentValues cv=new ContentValues();
         Log.d("PATH", path);
         cv.put(NoteTable.COLUMN_PATH, path);
         cv.put(NoteTable.COLUMN_AUTHOR, author);

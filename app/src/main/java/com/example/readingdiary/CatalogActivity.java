@@ -2,13 +2,17 @@ package com.example.readingdiary;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -19,6 +23,7 @@ import com.example.readingdiary.data.LiteratureContract.NoteTable;
 import com.example.readingdiary.data.OpenHelper;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,8 +44,38 @@ public class CatalogActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
 
+            if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    == PackageManager.PERMISSION_GRANTED) {
+                Log.v("FILE3", "Permission is granted");
+
+            } else {
+
+                Log.v("FILE3", "Permission is revoked");
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
+
+            }
+
+
+
+
+            if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE)
+                    == PackageManager.PERMISSION_GRANTED) {
+                Log.v("FILE3", "Permission is granted");
+
+            } else {
+
+                Log.v("FILE3", "Permission is revoked");
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
+
+            }
+
+
+
+
         setContentView(R.layout.activity_catalog);
         dbHelper = new OpenHelper(this);
+        File file = getExternalFilesDir(null);
+        Log.d("FILE1", file.getAbsolutePath());
         sdb = dbHelper.getReadableDatabase();
         notes = new ArrayList<Note>();
         buttons = new ArrayList<String>();
