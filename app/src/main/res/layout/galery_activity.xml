@@ -25,10 +25,4 @@
         tools:layout_editor_absoluteX="131dp"
         tools:layout_editor_absoluteY="195dp" />
 
-    <ImageView
-        android:id="@+id/imageView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:srcCompat="@color/colorPrimaryDark" />
-
 </RelativeLayout>

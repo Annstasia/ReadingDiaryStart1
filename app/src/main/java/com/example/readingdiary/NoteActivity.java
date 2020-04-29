@@ -44,58 +44,22 @@ public class NoteActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d("creation", "onCreate");
-
-
-        Toast.makeText(this, "onCreate", Toast.LENGTH_LONG).show();
         setContentView(R.layout.activity_note);
         dbHelper = new OpenHelper(this);
-
         sdb = dbHelper.getReadableDatabase();
         titleNoteActivity = (TextView) findViewById(R.id.titleNoteActivity);
         authorNoteActivity = (TextView) findViewById(R.id.authorNoteActivity);
         Bundle args = getIntent().getExtras();
         id = args.get("id").toString();
-        select(id);
-
-
-
-
-
-//        File folder = new File(Environment.getExternalStorageDirectory() + "/images");
-//        boolean success = true;
-//        if (!folder.exists()) {
-//            success = folder.mkdir();
-//        }
-//        File folder1 = new File(folder + "/id");
-//        if (!folder1.exists()) {
-//            success = folder1.mkdir();
-//        }
-//
-//        File imageFile = new File(folder1, "1.png");
-//        if (!imageFile.exists()){
-//            out = new FileOutputStream(imageFile);
-//            bmp.compress(Bitmap.CompressFormat.PNG, 100, out);
-//        }
-//        imageView.setImageDrawable(Drawable.createFromPath(imageFile));
-//
-
-
-
-
-
+        select(id); // Заполнение полей из бд
         imageView = (ImageView) findViewById(R.id.image_view);
-
-        Button pickImage = (Button) findViewById(R.id.button);
+        Button pickImage = (Button) findViewById(R.id.button); // переход в галерею
         pickImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(NoteActivity.this, GaleryActivity.class);
                 intent.putExtra("id", id);
                 startActivity(intent);
-//                Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
-//                photoPickerIntent.setType("image/*");
-//                startActivityForResult(photoPickerIntent, Pick_image);
             }
         });
 
@@ -175,6 +139,8 @@ public class NoteActivity extends AppCompatActivity {
 //
 
     public void select(String id){
+        // Выбор полей из бд
+        // Сейчас тут выбор не всех полей
 
         String[] projection = {
                 NoteTable._ID,
@@ -213,14 +179,6 @@ public class NoteActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        Log.d("lifecycle", "onStop");
-        Toast.makeText(getApplicationContext(), "stop", Toast.LENGTH_LONG).show();
-//        if (change) {
-//            Intent returnIntent = new Intent();
-//            returnIntent.putExtra("path", path);
-//            Log.d("IDPARENT", "return " + path);
-//            setResult(RESULT_OK, returnIntent);
-//        }
     }
 
     @Override
@@ -228,7 +186,7 @@ public class NoteActivity extends AppCompatActivity {
 
         super.onBackPressed();
         Toast.makeText(getApplicationContext(), "onBackPressed", Toast.LENGTH_LONG).show();
-        // Сделать проверку ответа
+        // нужно сделать проверку ответа
         finish();
     }
 
@@ -241,22 +199,5 @@ public class NoteActivity extends AppCompatActivity {
             returnIntent.putExtra("path", path);
             setResult(RESULT_OK, returnIntent);
         }
-
-
     }
-//        Log.d("IDPARENT", "return00 ");
-//        super.onDestroy();
-//        Log.d("IDPARENT", "return00 ");
-
-    //        if (change){
-//            Log.d("IDPARENT", "return0 " + path);
-//            Intent returnIntent = new Intent();
-//            returnIntent.putExtra("path", path);
-//            Log.d("IDPARENT", "return " + path);
-//            setResult(RESULT_OK, returnIntent);
-//        Toast.makeText(getApplicationContext(), "Destroy", Toast.LENGTH_LONG).show();
-//        Log.d("ONDESTROY", "onDestroy");
-//    }
-
-
 }

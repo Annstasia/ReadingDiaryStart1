@@ -11,6 +11,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
+
+// Адаптор путей (кнопочки, для быстрого перемещения назад)
 public class CatalogButtonAdapter extends RecyclerView.Adapter<CatalogButtonAdapter.ViewHolder>{
 
     private List<String> buttons;
@@ -46,37 +48,8 @@ public class CatalogButtonAdapter extends RecyclerView.Adapter<CatalogButtonAdap
     @Override
     public void onBindViewHolder(ViewHolder viewHolder, int i) {
         String tokens[] = buttons.get(i).split("/");
-
         viewHolder.path1.setText(tokens[tokens.length - 1] + " > ");
-//        int type = getItemViewType(i);
-//        if (type == TYPE_ITEM1){
-//            RealNote realNote = (RealNote) notes.get(i);
-//            viewHolder.path1.setText(realNote.getPath());
-//            viewHolder.author.setText(realNote.getAuthor());
-//            viewHolder.title.setText(realNote.getTitle());
-//        }
-//        if (type == TYPE_ITEM2){
-//            Directory directory = (Directory) notes.get(i);
-//            viewHolder.path2.setText(directory.getDirectory());
-//        }
-
-//
-//
-//        Note note = notes.get(i);
-//        viewHolder.path.setText(note.getPath());
-//        viewHolder.title.setText(note.getTitle());
-//        viewHolder.author.setText(note.getAuthor());
-
     }
-//
-//    @Override
-//    public int getItemViewType(int position) {
-//        // определяем какой тип в текущей позиции
-//        int type = notes.get(position).getItemType();
-//        if (type == 0) return TYPE_ITEM1;
-//        else return TYPE_ITEM2;
-//
-//    }
 
     @Override
     public int getItemCount() {
@@ -99,21 +72,10 @@ public class CatalogButtonAdapter extends RecyclerView.Adapter<CatalogButtonAdap
      */
 
     class ViewHolder extends RecyclerView.ViewHolder {
-//        private TextView path1;
-//        private TextView path2;
-//
-//        private TextView title;
-//        private TextView author;
         private TextView path1;
-
-//        private ImageView icon;
-
         public ViewHolder(View itemView) {
             super(itemView);
             path1 = (TextView) itemView.findViewById(R.id.catalog_button);
-//            title = (TextView) itemView.findViewById(R.id.titleViewCatalog);
-//            author = (TextView) itemView.findViewById(R.id.authorViewCatalog);
-//            path2 = (TextView) itemView.findViewById(R.id.pathViewCatalog1);
 
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override

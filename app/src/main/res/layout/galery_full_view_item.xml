@@ -7,11 +7,24 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:id="@+id/ll1">
+
+<!--        <Button-->
+<!--            android:id="@+id/delede_image_full"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="Button" />-->
+
+<!--        <Button-->
+<!--            android:id="@+id/setImageAsCover"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="Button" />-->
+
         <ImageView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
             android:id="@+id/galery_image_el1"
-            />
+            android:layout_width="match_parent"
+            android:layout_height="620dp" />
+
     </LinearLayout>
 
 </LinearLayout>

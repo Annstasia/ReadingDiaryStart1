@@ -1,5 +1,6 @@
 package com.example.readingdiary;
 
+// класс для записей
 public class RealNote implements Note{
     private String path;
     private String author;

@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.LinearSnapHelper;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.SnapHelper;
+import androidx.recyclerview.widget.SortedList;
 
 import android.content.Context;
 import android.content.Intent;
@@ -26,6 +27,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -35,9 +37,13 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 public class GaleryActivity extends AppCompatActivity {
     private ImageView imageView;
@@ -46,59 +52,50 @@ public class GaleryActivity extends AppCompatActivity {
     private GaleryRecyclerViewAdapter adapter;
     private GaleryFullViewAdapter adapter1;
     private List<Bitmap> images;
+    private List<String> names;
+    private final int FULL_GALERY_CODE = 8800;
+
     private int count = 3;
     String id;
-//    private SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd_HHmmss");
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.galery_activity);
-
-
         Bundle args = getIntent().getExtras();
         id = args.get("id").toString();
-        images = new ArrayList<>();
-        File fileDir1 = getApplicationContext().getDir("images" + File.pathSeparator + id, MODE_PRIVATE);
-        File[] files = fileDir1.listFiles();
+        images = new ArrayList<>(); // список bitmap изображений
+        names = new ArrayList<>(); // список путей к изображениями в файловой системе
+        File fileDir1 = getApplicationContext().getDir("images" + File.pathSeparator + id, MODE_PRIVATE); // путь к папке с изображениями
+        File[] files = fileDir1.listFiles(); // список файлов в папке
         if (files != null){
-            Log.d("FILE3", "NOTNULL" + files.length);
             for (int i = 0; i < files.length; i++){
                 images.add(BitmapFactory.decodeFile(files[i].getAbsolutePath()));
-                Log.d("FILE3", "name " + files[i].getName());
-                Log.d("FILE3", "bitmap " + BitmapFactory.decodeFile(files[i].getAbsolutePath()));
+                names.add(files[i].getAbsolutePath());
             }
         }
 
-//        FileInputStream fileInputStream = getApplicationContext().openFileInput("/images/);
-//        Bitmap source = BitmapFactory.decodeStream(fileInputStream);
-//        images.add(source);
-        imageView = (ImageView) findViewById(R.id.imageView);
         galeryView = (RecyclerView) findViewById(R.id.galery_recycle_view);
         adapter = new GaleryRecyclerViewAdapter(images, getApplicationContext());
-//        adapter1 = new GaleryFullViewAdapter(images, getApplicationContext());
 
-
-        GridLayoutManager layoutManager = new GridLayoutManager(this, 3);
+        GridLayoutManager layoutManager = new GridLayoutManager(this, 3); // отображение изображений в 3 колонки
         final LinearLayoutManager layoutManager1 = new LinearLayoutManager(this, RecyclerView.HORIZONTAL, false);
         RecyclerView.ItemAnimator itemAnimator = new DefaultItemAnimator();
 
         galeryView.setAdapter(adapter);
-//        galeryView.setAdapter(adapter1);
-
         galeryView.setLayoutManager(layoutManager);
-//        galeryView.setLayoutManager(layoutManager1);
-
 
         galeryView.setItemAnimator(itemAnimator);
 
 
+        // при нажатии на изображение переходим в активность с полным изображением
         adapter.setOnItemClickListener(new GaleryRecyclerViewAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(int position) {
-                adapter1 = new GaleryFullViewAdapter(images, getApplicationContext());
-                galeryView.setAdapter(adapter1);
-                galeryView.setLayoutManager(layoutManager1);
-                layoutManager1.scrollToPosition(position);
+                Intent intent = new Intent(GaleryActivity.this, GaleryFullViewActivity.class);
+                intent.putExtra("id", id);
+                intent.putExtra("position", position);
+                startActivityForResult(intent, FULL_GALERY_CODE);
+
             }
         });
 
@@ -106,11 +103,11 @@ public class GaleryActivity extends AppCompatActivity {
 
 
         Button pickImage = (Button) findViewById(R.id.button);
+
+        // Выбор изображений из галереи
         pickImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                Intent intent = new Intent(NoteActivity.this, GaleryActivity.class);
-//                startActivity(intent);
                 Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
                 photoPickerIntent.setType("image/*");
                 startActivityForResult(photoPickerIntent, Pick_image);
@@ -119,6 +116,8 @@ public class GaleryActivity extends AppCompatActivity {
     }
 
 
+
+    // методы проверки размера изображения до открытия. Если размер слишком большой - сжимаем
     public Bitmap decodeSampledBitmapFromResource(Uri imageUri,
                                                   int reqWidth, int reqHeight) throws Exception{
 
@@ -164,110 +163,83 @@ public class GaleryActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent imageReturnedIntent) {
-        super.onActivityResult(requestCode, resultCode, imageReturnedIntent);
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
         switch (requestCode) {
             case Pick_image:
                 if (resultCode == RESULT_OK) {
                     try {
-                        //объект и отображаем в элементе ImageView нашего интерфейса:
-                        final Uri imageUri = imageReturnedIntent.getData();
-//                        final InputStream imageStream = getContentResolver().openInputStream(imageUri);
-
-//                        imageUri.getPath()
+                        // Обработка выбранного изображения из галереи
+                        final Uri imageUri = data.getData();
                         int px = 600;
-//                        File file = new File(Environment.
-//                                getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),"map.jpg");
-                        Log.d("SCALE", "" +imageUri.getPath());
-
-                        Bitmap bitmap = decodeSampledBitmapFromResource(imageUri, px, px);
-
-                        Log.d("SCALE", "" + bitmap);
-//                        final Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);
-//                         String currentDateandTime = sdf.format(new Date());
+                        Bitmap bitmap = decodeSampledBitmapFromResource(imageUri, px, px); // файл сжимается
                         GregorianCalendar calendar = new GregorianCalendar();
-//                        calendar.setTime(new Date());
-//                        Date currentDate = new Date()
-//                        String ms = calendar.get(Calendar.MILLISECOND);
-////                        calendar.setTime(new Date());
-//                        String ss = calendar.get(Calendar.SECOND);
-//                        String mt = calendar.get(Calendar.MINUTE);
-//                        String hh = calendar.get(Calendar.HOUR_OF_DAY);
-//                        String dd = calendar.get(Calendar.DAY_OF_MONTH);
-//                        String mm = calendar.get(Calendar.MONTH);
-//                        String yy = calendar.get(Calendar.YEAR);
 
-//                        String name = yy + "_" + mm + "_" + dd + "_" + hh + "_" + mt + "_" + ss + "_" + ms;
-//                        String seconds = calendar.get(Calendar.SECOND).toString();
-
-//                        Log.d("TIME11", calendar.getTimeInMillis() + "");
-                        Log.d("TIME11", "giu");
-                        File file = new File(getApplicationContext().getExternalFilesDir(null) + "/images/" + id +"/" + calendar.getTimeInMillis() + ".png");
-                        Log.d("FILE3", file.getAbsolutePath());
-
+//                        File file = new File(getApplicationContext().getExternalFilesDir(null) + "/images/" + id +"/" + calendar.getTimeInMillis() + ".png"); // на
 
                         File fileDir1 = getApplicationContext().getDir("images" + File.pathSeparator + id, MODE_PRIVATE);
-                        File file2 = new File(fileDir1, calendar.getTimeInMillis() + ".png");
-                        Log.d("FILE3", "?");
-
+                        File file2 = new File(fileDir1, calendar.getTimeInMillis() + ".png"); // создаем файл в директории изображений записи. Имя выбирается на основе времени.
                         file2.createNewFile();
-                        Log.d("FILE3", "!!!!?!");
                         OutputStream stream = null;
-                        try{
-                            stream = new FileOutputStream(file2);
-//                            stream = getApplicationContext().openFileOutput(fileDir1 + File.pathSeparator + calendar.getTimeInMillis() + ".png", MODE_PRIVATE);
-//
-                        }
-                        catch (Exception e){
-                            Log.d("File3", "?" + e.toString());
-                        }
-                        Log.d("FILE3", "AfterStream");
-//                        Log.d("TIME11", stream.toString());
-                        Log.d("TIME11", "giu");
+                        stream = new FileOutputStream(file2);
 
 
-                        bitmap.compress(Bitmap.CompressFormat.PNG, 60, stream);// пишем битмап на PNG с качеством 70%
+                        bitmap.compress(Bitmap.CompressFormat.PNG, 60, stream);// сохранение
                         stream.close();
 
-                        File[] files = fileDir1.listFiles();
-                        if (files != null){
-                            Log.d("FILE3", "NOTNULL" + files.length);
-                            for (int i = 0; i < files.length; i++){
-                                images.add(BitmapFactory.decodeFile(files[i].getAbsolutePath()));
-                                Log.d("FILE3", "name " + files[i].getName());
-                                Log.d("FILE3", "bitmap " + BitmapFactory.decodeFile(files[i].getAbsolutePath()));
+                        // добавление изображения в список изображений
+                        String name = file2.getAbsolutePath();
+                        int pos = names.size();
+                        int n = names.size();
+
+                        for (int i = 0; i < n; i++){
+                            Log.d("COMPARE1", names.get(i).compareTo(name) + " " + n + " " + i);
+                            if (names.get(i).compareTo(name) > 0){
+                                Log.d("COMPARE1", "! " + names.get(i).compareTo(name) + " " + n);
+                                pos = i;
+                                break;
                             }
                         }
-//
-//                        FileInputStream fileInputStream = getApplicationContext().openFileInput("image" + count + ".png");
-//                        Bitmap source = BitmapFactory.decodeStream(fileInputStream);
-//                        images.add(source);
-//                        Display display = getWindowManager().getDefaultDisplay();
-//                        DisplayMetrics metricsB = new DisplayMetrics();
-//                        display.getMetrics(metricsB);
-//                        float size = metricsB.widthPixels / 3;
-//                        float size1 = Math.min(source.getWidth(), source.getHeight());
-//                        float k = size / size1;
-//                        Log.d("SCALE", k+" " + size + " " + size1);
-//                        Bitmap resizedBitmap = Bitmap.createScaledBitmap(source, (int)(source.getWidth() * k), (int)(source.getHeight() * k), false);
-//                        int x = (int)((resizedBitmap.getWidth() - size) / 2);
-//                        int y = (int)((resizedBitmap.getHeight() - size) / 2);
-//                        Bitmap result = Bitmap.createBitmap(resizedBitmap, x, y, (int)size, (int)size);
-//                        images.add(result);
+
+                        images.add(pos, bitmap);
+                        names.add(pos, name);
+
 
                         adapter.notifyDataSetChanged();
-//                        adapter1.notifyDataSetChanged();
-
-//                        count++;
-//                        fileInputStream.close();;
-
                     } catch (Exception e) {
                         Log.d("IMAGE1", e.toString());
                     }
                 }
                 break;
-            default:
+            case FULL_GALERY_CODE:
+                // Вернулись из показа полных изображений. Если там удалили изображение, то меняем список имен и изображений
+                Log.d("RESULT1", "ok3");
+
+                if (resultCode == RESULT_OK) {
+                    Log.d("RESULT1", "ok4");
+
+//                    int i = 0;
+
+                    List<Integer> index = new ArrayList<>();
+                    for (int i = 0; i < names.size(); i++){
+                        if(!(new File(names.get(i)).exists())) {
+                            index.add(i);
+                        }
+                    }
+
+                    int minus = 0;
+                    for (int i : index){
+                        names.remove(i - minus);
+                        images.remove(i - minus);
+                        minus++;
+                    }
+                    adapter.notifyDataSetChanged();
+                }
+                break;
+                default:
                 throw new IllegalStateException("Unexpected value: " + requestCode);
         }
+
+
     }
 }

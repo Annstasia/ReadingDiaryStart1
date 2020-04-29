@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
+// Адаптер для GaleryActivity.
 public class GaleryRecyclerViewAdapter extends RecyclerView.Adapter<GaleryRecyclerViewAdapter.ViewHolder>{
 
     private List<Bitmap> buttons;

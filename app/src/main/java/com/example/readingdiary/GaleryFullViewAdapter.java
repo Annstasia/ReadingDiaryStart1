@@ -14,25 +14,35 @@ import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
-
+// Адаптер поолнога показа изображений
 public class GaleryFullViewAdapter extends RecyclerView.Adapter<GaleryFullViewAdapter.ViewHolder>{
 
     private List<Bitmap> buttons;
     private GaleryFullViewAdapter.OnItemClickListener mListener;
+    private GaleryFullViewAdapter.OnItemDeleteListener delListener;
     private Context context;
     public interface OnItemClickListener{
         void onItemClick(int position);
+    }
+
+    public interface OnItemDeleteListener{
+        void onItemDelete(int position);
     }
 
 
     public void setOnItemClickListener(OnItemClickListener listener){
         mListener = listener;
     }
+
+    public void setOnItemDeleteListener(OnItemDeleteListener listener){delListener = listener;}
+
+
 
     public GaleryFullViewAdapter(List<Bitmap> buttons, Context context) {
         this.buttons = buttons;
@@ -57,60 +67,29 @@ public class GaleryFullViewAdapter extends RecyclerView.Adapter<GaleryFullViewAd
     /**
      * Заполнение виджетов View данными из элемента списка с номером i
      */
+//    private void removeAt(int position) {
+//        buttons.remove(position);
+//        notifyItemRemoved(position);
+//        notifyItemRangeChanged(position, buttons.size());
+//    }
+
     @Override
     public void onBindViewHolder(ViewHolder viewHolder, int i) {
         Log.d("BUTTONS", "3");
-//        String path = buttons.get(i);
-//        FileInputStream fileInputStream = openFileInput(path);
-//        Bitmap bitmap = BitmapFactory.decodeStream(fileInputStream);
         Bitmap source = buttons.get(i);
         Log.d("BUTTONS", ""+buttons.get(i));
-//        Display display = context.getResources().getDisplayMetrics()
-//        DisplayMetrics metricsB = context.getResources().getDisplayMetrics();
-////        display.getMetrics(metricsB);
-//        float size = metricsB.widthPixels / 3;
-//        float size1 = Math.min(source.getWidth(), source.getHeight());
-//        float k = size / size1;
-//        Log.d("SCALE", k+" " + size + " " + size1);
-//        Bitmap resizedBitmap = Bitmap.createScaledBitmap(source, (int)(source.getWidth() * k), (int)(source.getHeight() * k), false);
-//        int x = (int)((resizedBitmap.getWidth() - size) / 2);
-//        int y = (int)((resizedBitmap.getHeight() - size) / 2);
-//        Bitmap result = Bitmap.createBitmap(resizedBitmap, x, y, (int)size, (int)size);
+
+        final int el = i;
 
         viewHolder.imageView.setImageBitmap(source);
-//        viewHolder.imageView.setImageBitmap(buttons.get(i);
-
-
-//        viewHolder.imageview.setText(tokens[tokens.length - 1] + " > ");
-//        int type = getItemViewType(i);
-//        if (type == TYPE_ITEM1){
-//            RealNote realNote = (RealNote) notes.get(i);
-//            viewHolder.path1.setText(realNote.getPath());
-//            viewHolder.author.setText(realNote.getAuthor());
-//            viewHolder.title.setText(realNote.getTitle());
-//        }
-//        if (type == TYPE_ITEM2){
-//            Directory directory = (Directory) notes.get(i);
-//            viewHolder.path2.setText(directory.getDirectory());
-//        }
-
-//
-//
-//        Note note = notes.get(i);
-//        viewHolder.path.setText(note.getPath());
-//        viewHolder.title.setText(note.getTitle());
-//        viewHolder.author.setText(note.getAuthor());
+//        viewHolder.deleteButton.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                delListener.onItemDelete(el);
+//            }
+//        });
 
     }
-//
-//    @Override
-//    public int getItemViewType(int position) {
-//        // определяем какой тип в текущей позиции
-//        int type = notes.get(position).getItemType();
-//        if (type == 0) return TYPE_ITEM1;
-//        else return TYPE_ITEM2;
-//
-//    }
 
     @Override
     public int getItemCount() {
@@ -139,6 +118,7 @@ public class GaleryFullViewAdapter extends RecyclerView.Adapter<GaleryFullViewAd
 //        private TextView title;
 //        private TextView author;
         private ImageView imageView;
+//        private Button deleteButton;
 
 //        private ImageView icon;
 
@@ -146,6 +126,7 @@ public class GaleryFullViewAdapter extends RecyclerView.Adapter<GaleryFullViewAd
             super(itemView);
             Log.d("BUTTONS", "4");
             imageView = (ImageView) itemView.findViewById(R.id.galery_image_el1);
+//            deleteButton = (Button) itemView.findViewById(R.id.delede_image_full);
 //            title = (TextView) itemView.findViewById(R.id.titleViewCatalog);
 //            author = (TextView) itemView.findViewById(R.id.authorViewCatalog);
 //            path2 = (TextView) itemView.findViewById(R.id.pathViewCatalog1);

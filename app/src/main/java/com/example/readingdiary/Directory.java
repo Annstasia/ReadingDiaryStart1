@@ -1,6 +1,7 @@
 package com.example.readingdiary;
 
 
+// класс для директорий
 public class Directory implements Note{
     private long id;
     private String directory;

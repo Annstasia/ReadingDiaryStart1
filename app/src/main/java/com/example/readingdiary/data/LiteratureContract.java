@@ -3,6 +3,7 @@ package com.example.readingdiary.data;
 import android.provider.BaseColumns;
 
 public final class LiteratureContract {
+    // класс просто хранит таблицы бд и их колонки
     private LiteratureContract() {
     };
     public static final class NoteTable implements BaseColumns {

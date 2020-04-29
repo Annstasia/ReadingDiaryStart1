@@ -60,7 +60,7 @@ public class AddNoteActivity extends AppCompatActivity {
         final EditText titleField = (EditText) findViewById(R.id.titleField);
 
 
-
+        // отмена создании записи, возвращаемся к активности каталогов
         cancelAddingNote.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -70,28 +70,27 @@ public class AddNoteActivity extends AppCompatActivity {
             }
         });
 
+        // Подтверждение
         acceptAddingNote.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 path = pathField.getText().toString();
-                fixPath();
-                long id = insert(path, authorField.getText().toString(), titleField.getText().toString());
-//                new File("/images/" + id).mkdirs();
-                Log.d("FILE2", getApplicationContext().getExternalFilesDir("/images").getAbsolutePath());
+                fixPath(); // приведение пути к единому фромату
+                long id = insert(path, authorField.getText().toString(), titleField.getText().toString()); // добавление в бд
 
-                Intent intent = new Intent(AddNoteActivity.this, NoteActivity.class);
-                intent.putExtra("id", id);
+                Intent intent = new Intent(AddNoteActivity.this, NoteActivity.class); // вызов активности записи
+                intent.putExtra("id", id); // передаем id активности в бд, чтобы понять какую активность надо показывать
                 startActivity(intent);
-                displayDatabaseInfo();
+                displayDatabaseInfo(); // фигня не нужная, я использую, чтобы посмотреть, что творится с бд
                 Intent returnIntent = new Intent();
-                returnIntent.putExtra("path", path);
+                returnIntent.putExtra("path", path); // в CatalogActivity передаем путь для отображения нужной директории
                 setResult(RESULT_OK, returnIntent);
-                Log.d("IDPARENT", "setting");
                 closeActivity();
             }
         });
 
     }
+
 
     private void closeActivity(){
         finish();
@@ -99,6 +98,7 @@ public class AddNoteActivity extends AppCompatActivity {
 
 
     public long insert(String path, String author, String title) {
+        // добавляем нужные пути в бд и запись
         sdb = dbHelper.getWritableDatabase();
         ContentValues cv=new ContentValues();
         String pathTokens[] = ((String) path).split("/");
@@ -138,6 +138,8 @@ public class AddNoteActivity extends AppCompatActivity {
             }
         }
     }
+
+
 
     private void displayDatabaseInfo() {
 
