@@ -13,8 +13,15 @@ public final class LiteratureContract {
         public final static String COLUMN_PATH = "path";
         public final static String COLUMN_AUTHOR = "author";
         public final static String COLUMN_TITLE = "title";
-        public final static String COLUMN_LAST_IMAGE = "last_image";
-        public final static String COLUMN_TITLE_IMAGE = "title_image";
+        public final static String COLUMN_COVER_IMAGE = "cover_image";
+        public final static String COLUMN_RATING = "rating";
+        public final static String COLUMN_GENRE = "genre";
+        public final static String COLUMN_TIME = "time";
+        public final static String COLUMN_PLACE = "place";
+        public final static String COLUMN_SHORT_COMMENT = "short_comment";
+
+
+
 
 
 //        public final static String COLUMN_DIRECTORY = "directory";

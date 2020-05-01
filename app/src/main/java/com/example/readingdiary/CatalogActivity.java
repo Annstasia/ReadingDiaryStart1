@@ -126,9 +126,13 @@ public class CatalogActivity extends AppCompatActivity {
         addNote.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // Возвращается intent, если пользователь действительно добавил активность
-                Intent intent = new Intent(CatalogActivity.this, AddNoteActivity.class);
+//                // Возвращается intent, если пользователь действительно добавил активность
+//                Intent intent = new Intent(CatalogActivity.this, AddNoteActivity.class);
+//                startActivityForResult(intent, 12346);
+                Intent intent = new Intent(CatalogActivity.this, EditNoteActivity.class);
                 startActivityForResult(intent, 12346);
+
+
             }
         });
 
@@ -234,12 +238,21 @@ public class CatalogActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+//        Log.d("DATA1", data.toString());
+//        Log.d("DATA1", data.getExtras().get("path").toString());
         if (data != null && data.getExtras().get("path") != null){
             // если изменился путь до записи, добавилась новая запись, то переходим к этой записи
             parent = data.getExtras().get("path").toString();
             reloadRecyclerView();
             reloadButtonsView();
         }
+        if (requestCode==12346){
+            Intent intent = new Intent(CatalogActivity.this, NoteActivity.class); // вызов активности записи
+            intent.putExtra("id", data.getExtras().get("id").toString()); // передаем id активности в бд, чтобы понять какую активность надо показывать
+            startActivity(intent);
+        }
+
+
 
     }
 

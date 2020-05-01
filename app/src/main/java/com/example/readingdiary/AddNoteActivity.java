@@ -120,7 +120,6 @@ public class AddNoteActivity extends AppCompatActivity {
         cv.put(NoteTable.COLUMN_TITLE, title);
 
         return sdb.insert(NoteTable.TABLE_NAME, null, cv);
-
     }
 
 

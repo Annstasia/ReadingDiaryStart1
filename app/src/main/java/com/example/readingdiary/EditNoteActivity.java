@@ -1,28 +1,16 @@
 package com.example.readingdiary;
 
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
-import android.graphics.drawable.Drawable;
-import android.icu.text.CaseMap;
-import android.net.Uri;
 import android.os.Bundle;
-
-import com.example.readingdiary.data.LiteratureContract.NoteTable;
-import com.example.readingdiary.data.LiteratureContract;
-import com.example.readingdiary.data.OpenHelper;
-
-import android.os.Environment;
 import android.util.Log;
 import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -30,13 +18,17 @@ import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
+import com.example.readingdiary.data.LiteratureContract.NoteTable;
 
-public class NoteActivity extends AppCompatActivity {
+import com.example.readingdiary.data.OpenHelper;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
+import java.io.File;
+
+import javax.xml.transform.Result;
+import com.example.readingdiary.data.LiteratureContract.PathTable;
+
+public class EditNoteActivity extends AppCompatActivity {
     TextView pathView;
     TextView titleView;
     TextView authorView;
@@ -48,6 +40,8 @@ public class NoteActivity extends AppCompatActivity {
     ImageView coverView;
     String imagePath;
 
+
+
     SQLiteDatabase sdb;
     OpenHelper dbHelper;
     String id;
@@ -57,44 +51,72 @@ public class NoteActivity extends AppCompatActivity {
     private final int Pick_image = 1;
     private final int EDIT_REQUEST_CODE = 123;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_note);
+        setContentView(R.layout.activity_edit_note);
         dbHelper = new OpenHelper(this);
         sdb = dbHelper.getReadableDatabase();
         findViews();
-        ratingView.setEnabled(false);
-
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         Bundle args = getIntent().getExtras();
-        id = args.get("id").toString();
-        select(id); // Заполнение полей из бд
-//        imageView = (ImageView) findViewById(R.id.image_view);
-        Button pickImage = (Button) findViewById(R.id.button); // переход в галерею
-        pickImage.setOnClickListener(new View.OnClickListener() {
+        if (args != null){
+            id = args.get("id").toString();
+            Log.d("EDIT1", id);
+            select(id);
+        }
+
+        FloatingActionButton accept =  (FloatingActionButton) findViewById(R.id.acceptAddingNote2);
+        FloatingActionButton cancel =  (FloatingActionButton) findViewById(R.id.cancelAddingNote2);
+        accept.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(NoteActivity.this, GaleryActivity.class);
-                intent.putExtra("id", id);
-                startActivity(intent);
+                saveChanges();
+                finish();
             }
         });
+
+        cancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
+
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu){
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_note, menu);
+        return true;
+    }
+
+    public void findViews(){
+//        TextView path;
+        pathView = (TextView) findViewById(R.id.editPath);
+        titleView = (TextView) findViewById(R.id.editTitleNoteActivity);
+        authorView = (TextView) findViewById(R.id.editAuthorNoteActivity);
+        ratingView = (RatingBar) findViewById(R.id.editRatingBar);
+        genreView = (TextView) findViewById(R.id.editGenre);
+        timeView = (TextView) findViewById(R.id.editTime);
+        placeView = (TextView) findViewById(R.id.editPlace);
+        shortCommentView = (TextView) findViewById(R.id.editShortComment);
+        coverView = (ImageView) findViewById(R.id.editCoverImage);
 
 
     }
 
-
     public void setViews(String path, String author, String title, String rating, String genre,
                          String time, String place, String shortComment, String imagePath){
-        this.path = path;
+        this.pathView.setText(path);
         this.authorView.setText(author);
         this.titleView.setText(title);
         if (rating != null){
             this.ratingView.setRating(Float.parseFloat(rating));
         }
-
         this.genreView.setText(genre);
         this.timeView.setText(time);
         this.placeView.setText(place);
@@ -107,50 +129,10 @@ public class NoteActivity extends AppCompatActivity {
     }
 
 
-    public void findViews(){
-//        TextView path;
-        titleView = (TextView) findViewById(R.id.titleNoteActivity);
-        authorView = (TextView) findViewById(R.id.authorNoteActivity);
-        ratingView = (RatingBar) findViewById(R.id.ratingBar);
-        genreView = (TextView) findViewById(R.id.genre);
-        timeView = (TextView) findViewById(R.id.time);
-        placeView = (TextView) findViewById(R.id.place);
-        shortCommentView = (TextView) findViewById(R.id.shortComment);
-        coverView = (ImageView) findViewById(R.id.coverImage);
-
-
-    }
-
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu){
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_note, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-//        int id = item.getItemId();
-        int it = item.getItemId();
-        if (it == R.id.edit_note) {
-            Intent intent = new Intent(NoteActivity.this, EditNoteActivity.class);
-            intent.putExtra("id", id);
-            startActivityForResult(intent, EDIT_REQUEST_CODE);
-            return super.onOptionsItemSelected(item);
-        }
-        return true;
-    }
-
-
-
-
-
 
     public void select(String id){
         // Выбор полей из бд
         // Сейчас тут выбор не всех полей
-
         String[] projection = {
                 NoteTable._ID,
                 NoteTable.COLUMN_PATH,
@@ -185,7 +167,7 @@ public class NoteActivity extends AppCompatActivity {
             int shortCommentIndex =  cursor.getColumnIndex(NoteTable.COLUMN_SHORT_COMMENT);
 
             while (cursor.moveToNext()) {
-                Log.d("EDIT1", "select");
+                Log.d("EDIT1", "cursor");
                 setViews(cursor.getString(pathColumnIndex), cursor.getString(authorColumnIndex),
                         cursor.getString(titleColumnIndex), cursor.getString(ratingColumnIndex),
                         cursor.getString(genreColumnIndex), cursor.getString(timeColumnIndex),
@@ -198,6 +180,81 @@ public class NoteActivity extends AppCompatActivity {
         }
     }
 
+    public void saveChanges(){
+
+        Log.d("Edit1", "saved");
+        ContentValues cv = new ContentValues();
+//        cv.put(NoteTable.COLUMN_PATH, );
+        path = pathView.getText().toString();
+        Log.d("PATH1", path);
+        fixPath();
+        cv.put(NoteTable.COLUMN_PATH, path);
+        cv.put(NoteTable.COLUMN_AUTHOR, authorView.getText().toString());
+        cv.put(NoteTable.COLUMN_TITLE, titleView.getText().toString());
+        cv.put(NoteTable.COLUMN_COVER_IMAGE, imagePath);
+        cv.put(NoteTable.COLUMN_RATING, String.valueOf(ratingView.getRating()));
+        cv.put(NoteTable.COLUMN_GENRE,genreView.getText().toString());
+        cv.put(NoteTable.COLUMN_TIME, timeView.getText().toString());
+        cv.put(NoteTable.COLUMN_PLACE, placeView.getText().toString());
+        cv.put(NoteTable.COLUMN_SHORT_COMMENT, shortCommentView.getText().toString());
+
+        Log.d("Edit1", "saved1");
+        if (id != null){
+
+            sdb.update(NoteTable.TABLE_NAME, cv, "_id=" + id, null);
+            changedIntent();
+        }
+        else{
+            id = sdb.insert(NoteTable.TABLE_NAME, null, cv) + "";
+            cv.clear();
+            String pathTokens[] = ((String) path).split("/");
+            String prev = pathTokens[0] + "/";
+            for (int i = 1; i < pathTokens.length; i++){
+                if (pathTokens[i].equals("")){
+                    continue;
+                }
+                cv.put(PathTable.COLUMN_PARENT, prev);
+                prev = prev + pathTokens[i] + "/";
+                cv.put(PathTable.COLUMN_CHILD, prev);
+                sdb.insert(PathTable.TABLE_NAME, null, cv);
+                cv.clear();
+
+            }
+//            id = sdb.insert(NoteTable.TABLE_NAME, null, cv) + "";
+            insertIntent();
+        }
+    }
+
+    public void fixPath(){
+        if (path.equals("") || path.equals("/")) path = "./";
+        else{
+            if (path.charAt(path.length() - 1) != '/'){
+                path = path + "/";
+            }
+            if (path.charAt(0) == '/'){
+                path = "." + path;
+            }
+            if (path.charAt(0) != '.'){
+                path = "./" + path;
+            }
+        }
+    }
+
+
+    public void changedIntent(){
+        Intent returnIntent = new Intent();
+        returnIntent.putExtra("change", "true");
+        setResult(RESULT_OK, returnIntent);
+        Log.d("EDIT1", "change");
+    }
+
+    public void insertIntent(){
+        Intent returnIntent = new Intent();
+        returnIntent.putExtra("id", id);
+        returnIntent.putExtra("path", path);
+        setResult(RESULT_OK, returnIntent);
+    }
+
     @Override
     protected void onStop() {
         super.onStop();
@@ -205,10 +262,8 @@ public class NoteActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-
+        saveChanges();
         super.onBackPressed();
-        Toast.makeText(getApplicationContext(), "onBackPressed", Toast.LENGTH_LONG).show();
-        // нужно сделать проверку ответа
         finish();
     }
 
@@ -216,21 +271,11 @@ public class NoteActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         Toast.makeText(getApplicationContext(), "Destroy", Toast.LENGTH_LONG).show();
-        if (change){
-            Intent returnIntent = new Intent();
-            returnIntent.putExtra("path", path);
-            setResult(RESULT_OK, returnIntent);
-        }
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        Log.d("EDIT1", "all result " + id);
-        if (requestCode==EDIT_REQUEST_CODE){
-                select(id);
-
-        }
-
+//        if (change){
+//            Intent returnIntent = new Intent();
+////            returnIntent.putExtra("path", path);
+//            setResult(RESULT_OK, returnIntent);
+//        }
     }
 }
+

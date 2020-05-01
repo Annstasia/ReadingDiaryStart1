@@ -26,10 +26,15 @@ public class OpenHelper extends SQLiteOpenHelper {
                 LiteratureContract.NoteTable._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 LiteratureContract.NoteTable.COLUMN_PATH + " TEXT, " +
                 LiteratureContract.NoteTable.COLUMN_AUTHOR + " TEXT, " +
-                LiteratureContract.NoteTable.COLUMN_TITLE + " TEXT," +
-                NoteTable.COLUMN_LAST_IMAGE + " INTEGER," +
-                NoteTable.COLUMN_TITLE_IMAGE + " INTEGER" +
-                 ");";
+                LiteratureContract.NoteTable.COLUMN_TITLE + " TEXT, " +
+                NoteTable.COLUMN_COVER_IMAGE + " TEXT, " +
+                NoteTable.COLUMN_RATING + " TEXT, " +
+                NoteTable.COLUMN_GENRE + " TEXT, " +
+                NoteTable.COLUMN_TIME + " TEXT, " +
+                NoteTable.COLUMN_PLACE + " TEXT, " +
+                NoteTable.COLUMN_SHORT_COMMENT+ " TEXT" +
+
+                ");";
 
         db.execSQL(query);
         String query1 = "CREATE TABLE " + LiteratureContract.PathTable.TABLE_NAME + " (" +
