@@ -33,21 +33,25 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <EditText
+            <TextView
                 android:id="@+id/titleNoteActivity"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ems="10"
-                android:inputType="textPersonName"
-                android:text="Title" />
+                android:text="Title"
+                android:textSize="10pt"
+                android:textColor="@color/colorText"
+                android:layout_margin="5pt"/>
 
 
-            <EditText
+            <TextView
                 android:id="@+id/authorNoteActivity"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ems="10"
-                android:inputType="textPersonName"
+                android:textSize="10pt"
+                android:textColor="@color/colorText"
+                android:layout_margin="5pt"
                 android:text="Author" />
 
 
@@ -68,52 +72,53 @@
                 style="@style/RatingBar"/>
 
 
-            <EditText
-                android:id="@+id/rating"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:ems="10"
-                android:inputType="textPersonName"
-                android:text="Рейтинг" />
 
 
 
-            <EditText
+            <TextView
                 android:id="@+id/genre"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ems="10"
-                android:inputType="textPersonName"
-                android:text="Жанр" />
+                android:text="Жанр"
+                android:textSize="10pt"
+                android:textColor="@color/colorText"
+                android:layout_margin="5pt"/>
 
 
 
-            <EditText
+            <TextView
                 android:id="@+id/time"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ems="10"
-                android:inputType="textPersonName"
-                android:text="период" />
+                android:text="период"
+                android:textSize="10pt"
+                android:textColor="@color/colorText"
+                android:layout_margin="5pt"/>
 
 
 
-            <EditText
+            <TextView
                 android:id="@+id/place"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ems="10"
-                android:inputType="textPersonName"
-                android:text="место" />
+                android:text="место"
+                android:textSize="10pt"
+                android:textColor="@color/colorText"
+                android:layout_margin="5pt"/>
 
 
-            <EditText
+            <TextView
                 android:id="@+id/shortComment"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ems="10"
-                android:inputType="textPersonName"
-                android:text="краткий комментарий" />
+                android:text="краткий комментарий"
+                android:textSize="10pt"
+                android:textColor="@color/colorText"
+                android:layout_margin="5pt"/>
 
 
         </LinearLayout>
