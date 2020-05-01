@@ -56,6 +56,8 @@ public class NoteActivity extends AppCompatActivity {
     private ImageView imageView;
     private final int Pick_image = 1;
     private final int EDIT_REQUEST_CODE = 123;
+    private final int GALERY_REQUEST_CODE = 124;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,7 +80,8 @@ public class NoteActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Intent intent = new Intent(NoteActivity.this, GaleryActivity.class);
                 intent.putExtra("id", id);
-                startActivity(intent);
+                startActivityForResult(intent, GALERY_REQUEST_CODE);
+//                select(id); // добавить проверку на изменение, а потом уже select
             }
         });
 
@@ -100,6 +103,7 @@ public class NoteActivity extends AppCompatActivity {
         this.placeView.setText(place);
         this.shortCommentView.setText(shortComment);
 //        File file = new File(imagePath);
+        Log.d("IMAGE1", imagePath +" !");
         if (imagePath != null){
             this.coverView.setImageBitmap(BitmapFactory.decodeFile(imagePath));
             this.imagePath = imagePath;
@@ -190,7 +194,7 @@ public class NoteActivity extends AppCompatActivity {
                         cursor.getString(titleColumnIndex), cursor.getString(ratingColumnIndex),
                         cursor.getString(genreColumnIndex), cursor.getString(timeColumnIndex),
                         cursor.getString(placeColumnIndex), cursor.getString(shortCommentIndex),
-                        cursor.getString(shortCommentIndex));
+                        cursor.getString(coverColumnIndex));
             }
         }
         finally{
@@ -229,7 +233,11 @@ public class NoteActivity extends AppCompatActivity {
         Log.d("EDIT1", "all result " + id);
         if (requestCode==EDIT_REQUEST_CODE){
                 select(id);
+        }
 
+        if (requestCode==GALERY_REQUEST_CODE){
+            Log.d("IMAGE1", "result1");
+            select(id);
         }
 
     }

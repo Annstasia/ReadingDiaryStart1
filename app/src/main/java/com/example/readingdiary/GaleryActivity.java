@@ -113,8 +113,17 @@ public class GaleryActivity extends AppCompatActivity {
                 startActivityForResult(photoPickerIntent, Pick_image);
             }
         });
+        setResultChanged();
     }
 
+
+
+    private void setResultChanged(){
+        // создание возвращаемого интента
+        Intent returnIntent = new Intent();
+//        returnIntent.putExtra("changed", "changed);
+        setResult(RESULT_OK, returnIntent);
+    }
 
 
     // методы проверки размера изображения до открытия. Если размер слишком большой - сжимаем

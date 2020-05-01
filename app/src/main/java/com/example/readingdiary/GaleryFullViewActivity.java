@@ -6,7 +6,9 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.ContentValues;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
@@ -16,6 +18,9 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.os.Handler;
 import android.widget.Toast;
+
+import com.example.readingdiary.data.LiteratureContract;
+import com.example.readingdiary.data.OpenHelper;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -58,6 +63,7 @@ public class GaleryFullViewActivity extends AppCompatActivity {
 
 
         Button deleteButton = (Button) findViewById(R.id.deleteFullImageButton);
+        Button coverButton = (Button) findViewById(R.id.setAsCoverButton);
         galeryFullView = (RecyclerView) findViewById(R.id.galery_full_recycle_view);
 
         // добавляем адаптер
@@ -111,6 +117,22 @@ public class GaleryFullViewActivity extends AppCompatActivity {
                 }
             }
         });
+
+
+        coverButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                OpenHelper dbHelper = new OpenHelper(getApplicationContext());
+                SQLiteDatabase sdb = dbHelper.getReadableDatabase();
+                ContentValues cv = new ContentValues();
+                cv.put(LiteratureContract.NoteTable.COLUMN_COVER_IMAGE, names.get(position));
+                Log.d("IMAGE1", "!!! " + names.get(position));
+                sdb.update(LiteratureContract.NoteTable.TABLE_NAME, cv, LiteratureContract.NoteTable._ID + " = " + id, null);
+                Log.d("IMAGE1", "!!!end " + id);
+
+            }
+        });
+
 
 
 
