@@ -17,4 +17,10 @@
         android:clickable="true"
         app:srcCompat="@android:drawable/ic_input_add" />
 
+    <Button
+        android:id="@+id/bStart"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Start Work" />
+
 </LinearLayout>

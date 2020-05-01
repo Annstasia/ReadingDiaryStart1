@@ -246,7 +246,7 @@ public class CatalogActivity extends AppCompatActivity {
             reloadRecyclerView();
             reloadButtonsView();
         }
-        if (requestCode==12346){
+        if (requestCode==12346 && resultCode == RESULT_OK){
             Intent intent = new Intent(CatalogActivity.this, NoteActivity.class); // вызов активности записи
             intent.putExtra("id", data.getExtras().get("id").toString()); // передаем id активности в бд, чтобы понять какую активность надо показывать
             startActivity(intent);
