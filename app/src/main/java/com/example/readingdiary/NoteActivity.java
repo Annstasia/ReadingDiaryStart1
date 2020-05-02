@@ -57,6 +57,7 @@ public class NoteActivity extends AppCompatActivity {
     private final int Pick_image = 1;
     private final int EDIT_REQUEST_CODE = 123;
     private final int GALERY_REQUEST_CODE = 124;
+    private final int COMENTS_REQUEST_CODE = 125;
 
 
     @Override
@@ -74,7 +75,7 @@ public class NoteActivity extends AppCompatActivity {
         id = args.get("id").toString();
         select(id); // Заполнение полей из бд
 //        imageView = (ImageView) findViewById(R.id.image_view);
-        Button pickImage = (Button) findViewById(R.id.button); // переход в галерею
+        Button pickImage = (Button) findViewById(R.id.galeryButton); // переход в галерею
         pickImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -84,6 +85,31 @@ public class NoteActivity extends AppCompatActivity {
 //                select(id); // добавить проверку на изменение, а потом уже select
             }
         });
+
+        Button coments = (Button) findViewById(R.id.comentsButton);
+        coments.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(NoteActivity.this, Coments.class);
+                intent.putExtra("id", id);
+                intent.putExtra("type", "comments");
+                startActivityForResult(intent, COMENTS_REQUEST_CODE);
+            }
+        });
+
+        Button description = (Button) findViewById(R.id.descriptionButton);
+        description.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(NoteActivity.this, Coments.class);
+                intent.putExtra("id", id);
+                intent.putExtra("type", "description");
+                startActivityForResult(intent, COMENTS_REQUEST_CODE);
+            }
+        });
+
+
+
 
 
     }

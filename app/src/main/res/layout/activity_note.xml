@@ -132,26 +132,26 @@
         android:orientation="horizontal">
 
         <Button
-            android:id="@+id/button"
+            android:id="@+id/galeryButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="галерея" />
 
         <Button
-            android:id="@+id/button2"
+            android:id="@+id/descriptionButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="описание" />
 
         <Button
-            android:id="@+id/button4"
+            android:id="@+id/comentsButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="отзыв" />
 
         <Button
-            android:id="@+id/button5"
+            android:id="@+id/quoteButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
