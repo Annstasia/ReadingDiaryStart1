@@ -1,5 +1,7 @@
 package com.example.readingdiary;
 
+import java.util.Comparator;
+
 // класс для записей
 public class RealNote implements Note{
     private String path;
@@ -7,14 +9,16 @@ public class RealNote implements Note{
     private String title;
     private long id;
     private final int type = 0;
+    private double rating;
 
 
 
-    public RealNote(long id, String path, String author, String title){
+    public RealNote(long id, String path, String author, String title, double rating){
         this.id = id;
         this.path = path;
         this.title = title;
         this.author = author;
+        this.rating = rating;
     }
 
     public String getPath() {
@@ -41,6 +45,14 @@ public class RealNote implements Note{
         this.title = title;
     }
 
+    public double getRating() {
+        return rating;
+    }
+
+    public void setRating(double rating) {
+        this.rating = rating;
+    }
+
     @Override
     public int getItemType() {
         return type;
@@ -50,5 +62,7 @@ public class RealNote implements Note{
     public long getID() {
         return id;
     }
+
+
 }
 

@@ -6,6 +6,8 @@ import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.appcompat.widget.Toolbar;
+
 
 import android.Manifest;
 import android.content.Intent;
@@ -15,8 +17,14 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.Toast;
+//import android.widget.Toolbar;
 
 import com.example.readingdiary.data.LiteratureContract;
 import com.example.readingdiary.data.LiteratureContract.NoteTable;
@@ -27,18 +35,34 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+
+
 public class CatalogActivity extends AppCompatActivity {
     // класс отвечает за активность с каталогами
     OpenHelper dbHelper;
     RecyclerViewAdapter mAdapter;
     SQLiteDatabase sdb;
     String parent = "./";
-    List<Note> notes;
-    List<String> buttons;
-    List<String> directories;
+    ArrayList<Note> notes;
+    ArrayList<String> buttons;
+    ArrayList<String> directories;
     RecyclerView recyclerView;
     RecyclerView buttonView;
     CatalogButtonAdapter buttonAdapter;
+    CatalogSortsSpinnerAdapter sortsAdapter;
+    ArrayList<String> sortsList;
+
+    String sortTitles1 = "Сортировка по названиям в лексикографическом порядке";
+    String sortTitles2 = "Сортировка по названиям в обратном лексикографическим порядке";
+    String sortAuthors1 = "Сортировка по автору в лексиграфическом порядке";
+    String sortAuthors2 = "Сортировка по автору в обратном лексиграфическим порядке";
+    String sortRating1 = "Сортировка по возрастанию рейтинга";
+    String sortRating2 = "Сортировка по убыванию рейтинга";
+    String comp="";
+    int order;
+    int startPos;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,18 +90,29 @@ public class CatalogActivity extends AppCompatActivity {
 
         }
 
+
+
         dbHelper = new OpenHelper(this);
-//        File file = getExternalFilesDir(null);
-//        Log.d("FILE1", file.getAbsolutePath());
+
         sdb = dbHelper.getReadableDatabase();
         notes = new ArrayList<Note>(); // список того, что будет отображаться в каталоге.
         buttons = new ArrayList<String>(); // Список пройденный каталогов до текущего
+        initSortsList();
         buttons.add(parent);
 
         recyclerView = (RecyclerView) findViewById(R.id.recyclerViewCatalog);  // здесь будут отображаться каталоги и файлы notes
         buttonView = (RecyclerView) findViewById(R.id.buttonViewCatalog);  // здесь будут отображаться пройденные поддиректории buttons
         selectAll(); // чтение данных из бд
         createRecyclerView(); // создание и присоединение адаптеров для recyclerView и buttonView
+
+        Spinner sortsSpinner = (Spinner) findViewById(R.id.spinnerSorts);
+        sortsAdapter = new CatalogSortsSpinnerAdapter(this, sortsList);
+        sortsSpinner.setAdapter(sortsAdapter);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar2);
+
+        Button findButton = (Button) findViewById(R.id.findButton);
+        final EditText findText = (EditText) findViewById(R.id.findText);
+
 
         // Обработчик нажатия на элемент адаптера каталогов
         mAdapter.setOnItemClickListener(new RecyclerViewAdapter.OnItemClickListener() {
@@ -107,6 +142,21 @@ public class CatalogActivity extends AppCompatActivity {
             }
         });
 
+        sortsSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String clickedItem = (String) parent.getItemAtPosition(position);
+//                String clickedCountryName = clickedItem.getCountryName();
+                startSort(clickedItem);
+                Toast.makeText(getApplicationContext(), clickedItem + " selected", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
 
         // адаптер отвесает за вывод пройденных директорий сверху и перемещение обратно.
         // При нажатии на путь перемещается в соответствующую директорию
@@ -120,6 +170,7 @@ public class CatalogActivity extends AppCompatActivity {
 
             }
         });
+
 
         // Кнопка добавление новой активности
         FloatingActionButton addNote = (FloatingActionButton) findViewById(R.id.addNote);
@@ -136,9 +187,25 @@ public class CatalogActivity extends AppCompatActivity {
             }
         });
 
+        findButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                notes.clear();
+//                buttons.clear();
+                selectTitle(findText.getText().toString());
+                mAdapter.notifyDataSetChanged();
+//                buttonAdapter.notifyDataSetChanged();
+            }
+        });
+
     }
 
-
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu){
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_note, menu);
+        return true;
+    }
 
     public void selectAll() {
 
@@ -153,7 +220,7 @@ public class CatalogActivity extends AppCompatActivity {
         };
         Cursor mCursor1 = sdb.query(LiteratureContract.PathTable.TABLE_NAME, projection1,
                 LiteratureContract.PathTable.COLUMN_PARENT + " = ?", new String[] {parent},
-                null, null, null);
+                null, null, LiteratureContract.PathTable.COLUMN_CHILD);
         int idColumnIndex1 = mCursor1.getColumnIndex(LiteratureContract.PathTable._ID);
         int childColumnIndex = mCursor1.getColumnIndex(LiteratureContract.PathTable.COLUMN_CHILD);
         while (mCursor1.moveToNext()){
@@ -162,6 +229,7 @@ public class CatalogActivity extends AppCompatActivity {
             notes.add(new Directory(currentId, currentChild));
         }
         mCursor1.close();
+        startPos = notes.size();
 
 
         // Выбор и добавление записей, находящихся в текущей дирректории parent
@@ -169,7 +237,8 @@ public class CatalogActivity extends AppCompatActivity {
                 NoteTable._ID,
                 NoteTable.COLUMN_PATH,
                 NoteTable.COLUMN_AUTHOR,
-                NoteTable.COLUMN_TITLE
+                NoteTable.COLUMN_TITLE,
+                NoteTable.COLUMN_RATING
         };
         Cursor cursor = sdb.query(
                 NoteTable.TABLE_NAME,
@@ -183,12 +252,55 @@ public class CatalogActivity extends AppCompatActivity {
         int pathColumnIndex = cursor.getColumnIndex(NoteTable.COLUMN_PATH);
         int authorColumnIndex = cursor.getColumnIndex(NoteTable.COLUMN_AUTHOR);
         int titleColumnIndex = cursor.getColumnIndex(NoteTable.COLUMN_TITLE);
+        int ratingColumnIndex = cursor.getColumnIndex(NoteTable.COLUMN_RATING);
         while (cursor.moveToNext()) {
             int currentID = cursor.getInt(idColumnIndex);
             String currentPath = cursor.getString(pathColumnIndex);
             String currentAuthor = cursor.getString(authorColumnIndex);
             String currentTitle = cursor.getString(titleColumnIndex);
-            notes.add(new RealNote(currentID, currentPath, currentAuthor, currentTitle));
+            double currentRating = Double.valueOf(cursor.getString(ratingColumnIndex));
+            notes.add(new RealNote(currentID, currentPath, currentAuthor, currentTitle, currentRating));
+        }
+        cursor.close();
+
+    }
+
+    public void selectTitle(String title){
+        String[] projection = {
+                NoteTable._ID,
+                NoteTable.COLUMN_PATH,
+                NoteTable.COLUMN_AUTHOR,
+                NoteTable.COLUMN_TITLE,
+                NoteTable.COLUMN_RATING
+        };
+        String[] titles = new String[title.length()];
+        titles[0] = title;
+        for (int i = 1; i < titles.length - 2; i++){
+            titles[i] = title.substring(0, i) + "%" + title.substring(i + 1, titles.length - 1);
+        }
+        titles[titles.length - 1] = title.substring(0, titles.length - 1) + "%";
+        Cursor cursor = sdb.query(
+                true,
+                NoteTable.TABLE_NAME,
+                projection,
+                NoteTable.COLUMN_TITLE + " LIKE ?",
+                new String[]{title},
+                null,
+                null,
+                null,
+                null);
+        int idColumnIndex = cursor.getColumnIndex(NoteTable._ID);
+        int pathColumnIndex = cursor.getColumnIndex(NoteTable.COLUMN_PATH);
+        int authorColumnIndex = cursor.getColumnIndex(NoteTable.COLUMN_AUTHOR);
+        int titleColumnIndex = cursor.getColumnIndex(NoteTable.COLUMN_TITLE);
+        int ratingColumnIndex = cursor.getColumnIndex(NoteTable.COLUMN_RATING);
+        while (cursor.moveToNext()) {
+            int currentID = cursor.getInt(idColumnIndex);
+            String currentPath = cursor.getString(pathColumnIndex);
+            String currentAuthor = cursor.getString(authorColumnIndex);
+            String currentTitle = cursor.getString(titleColumnIndex);
+            double currentRating = Double.valueOf(cursor.getString(ratingColumnIndex));
+            notes.add(new RealNote(currentID, currentPath, currentAuthor, currentTitle, currentRating));
         }
         cursor.close();
 
@@ -210,6 +322,18 @@ public class CatalogActivity extends AppCompatActivity {
         buttonView.setLayoutManager(layoutManager1);
         buttonView.setItemAnimator(itemAnimator1);
 
+    }
+
+
+    public void initSortsList(){
+        sortsList = new ArrayList<>();
+        sortsList.add("");
+        sortsList.add("Сортировка по названиям в лексикографическом порядке");
+        sortsList.add("Сортировка по названиям в обратном лексикографическим порядке");
+        sortsList.add("Сортировка по автору в лексиграфическом порядке");
+        sortsList.add("Сортировка по автору в обратном лексиграфическим порядке");
+        sortsList.add("Сортировка по возрастанию рейтинга");
+        sortsList.add("Сортировка по убыванию рейтинга");
     }
 
     protected void reloadRecyclerView(){
@@ -255,6 +379,134 @@ public class CatalogActivity extends AppCompatActivity {
 
 
     }
+
+
+    public void startSort(String sortType) {
+        if (sortType.equals(sortTitles1)){
+            comp = "title";
+            order = 1;
+        }
+        if (sortType.equals(sortTitles2)){
+            comp = "title";
+            order = -1;
+        }
+        if (sortType.equals(sortAuthors1)){
+            comp = "author";
+            order = 1;
+        }
+        if (sortType.equals(sortAuthors2)){
+            comp = "author";
+            order = -1;
+        }
+        if (sortType.equals(sortRating1)){
+            comp = "rating";
+            order = 1;
+        }
+        if (sortType.equals(sortRating2)){
+            comp = "rating";
+            order = -1;
+        }
+        quickSort(startPos, notes.size() - 1);
+        mAdapter.notifyDataSetChanged();
+
+
+    }
+
+    public void quickSort(int from, int to) {
+        if (from < to) {
+            int divideIndex;
+            if (comp != "rating"){
+                divideIndex = partitionString(from, to);
+            }
+            else{
+                divideIndex = partitionDouble(from, to);
+            }
+
+            quickSort(from, divideIndex - 1);
+            quickSort(divideIndex, to);
+        }
+    }
+    private int partitionString(int from, int to)
+    {
+        int rightIndex = to;
+        int leftIndex = from;
+
+        String pivot = getComparable((RealNote) notes.get(from + (to - from) / 2));
+        while (leftIndex <= rightIndex)
+        {
+
+            while (order * (getComparable((RealNote) notes.get(leftIndex)).compareTo(pivot)) < 0)
+            {
+                leftIndex++;
+            }
+
+            while (order * (getComparable((RealNote) notes.get(rightIndex)).compareTo(pivot)) > 0)
+            {
+                rightIndex--;
+            }
+
+            if (leftIndex <= rightIndex)
+            {
+                swap(rightIndex, leftIndex);
+                leftIndex++;
+                rightIndex--;
+            }
+        }
+        return leftIndex;
+    }
+
+    private int partitionDouble(int from, int to){
+        int rightIndex = to;
+        int leftIndex = from;
+
+        Double pivot = getComparableDouble((RealNote) notes.get(from + (to - from) / 2));
+        while (leftIndex <= rightIndex)
+        {
+
+            while (order * (getComparableDouble((RealNote) notes.get(leftIndex)).compareTo(pivot)) < 0)
+            {
+                leftIndex++;
+            }
+
+            while (order * (getComparableDouble((RealNote) notes.get(rightIndex)).compareTo(pivot)) > 0)
+            {
+                rightIndex--;
+            }
+
+            if (leftIndex <= rightIndex)
+            {
+                swap(rightIndex, leftIndex);
+                leftIndex++;
+                rightIndex--;
+            }
+        }
+        return leftIndex;
+    }
+
+
+    public String getComparable(RealNote realNote){
+        if (comp.equals("title")){
+            return realNote.getTitle();
+        }
+        if (comp.equals("author")){
+            return realNote.getAuthor();
+        }
+
+        return "";
+    }
+
+    private void swap(int index1, int index2)
+    {
+        Note tmp  = notes.get(index1);
+        notes.set(index1, notes.get(index2));
+        notes.set(index2, tmp);
+    }
+
+    private Double getComparableDouble(RealNote realNote){
+        return realNote.getRating();
+    }
+
+
 
 
 }

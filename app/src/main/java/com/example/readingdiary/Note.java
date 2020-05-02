@@ -4,6 +4,11 @@ package com.example.readingdiary;
 public interface Note{
     int getItemType();
     long getID();
+
+
+
+
+
 }
 
 
