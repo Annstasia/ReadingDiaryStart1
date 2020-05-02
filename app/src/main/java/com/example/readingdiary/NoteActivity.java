@@ -108,6 +108,17 @@ public class NoteActivity extends AppCompatActivity {
             }
         });
 
+        Button quotes = (Button) findViewById(R.id.quoteButton);
+        quotes.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(NoteActivity.this, VariousShow.class);
+                intent.putExtra("id", id);
+                intent.putExtra("type", "quotes");
+                startActivityForResult(intent, COMENTS_REQUEST_CODE);
+            }
+        });
+
 
 
 
