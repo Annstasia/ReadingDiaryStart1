@@ -90,7 +90,7 @@ public class NoteActivity extends AppCompatActivity {
         coments.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(NoteActivity.this, Coments.class);
+                Intent intent = new Intent(NoteActivity.this, VariousShow.class);
                 intent.putExtra("id", id);
                 intent.putExtra("type", "comments");
                 startActivityForResult(intent, COMENTS_REQUEST_CODE);
@@ -101,7 +101,7 @@ public class NoteActivity extends AppCompatActivity {
         description.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(NoteActivity.this, Coments.class);
+                Intent intent = new Intent(NoteActivity.this, VariousShow.class);
                 intent.putExtra("id", id);
                 intent.putExtra("type", "description");
                 startActivityForResult(intent, COMENTS_REQUEST_CODE);

@@ -2,6 +2,7 @@ package com.example.readingdiary;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.graphics.Path;
 import android.os.Bundle;
 import android.os.FileUtils;
@@ -39,12 +40,13 @@ public class Coments extends AppCompatActivity {
         }
 
         text = (TextInputEditText) findViewById(R.id.editTextComments);
-        try{
-            openText();
-        }
-        catch (Exception e){
-            Log.d("openException", e.toString());
-        }
+        Log.d("COMENTS1", "create");
+//        try{
+//            openText();
+//        }
+//        catch (Exception e){
+//            Log.d("openException", e.toString());
+//        }
 
 
 
@@ -52,9 +54,16 @@ public class Coments extends AppCompatActivity {
     }
 
     @Override
+    public void onBackPressed() {
+        returnResult(saveText());
+        super.onBackPressed();
+    }
+
+    @Override
     protected void onDestroy() {
-        Log.d("open1234", "onDestroy");
-        saveText();
+        Log.d("COMENTS1", "destroy");
+
+//        returnResult(saveText());
         super.onDestroy();
     }
 
@@ -85,24 +94,49 @@ public class Coments extends AppCompatActivity {
         Log.d("open1234", "startOpen8 " + id);
     }
 
-    private void saveText(){
+    private long saveText(){
 //        File fileDir1 = getApplicationContext().getDir("coments" + File.pathSeparator + id, MODE_PRIVATE);
 //        if (!fileDir1.exists()) fileDir1.mkdirs();
 //        File file = new File(fileDir1, new GregorianCalendar().getTimeInMillis() + ".txt");
         try{
-            File fileDir1 = getApplicationContext().getDir(type, MODE_PRIVATE);
+            Log.d("COMENTS1", "save1");
+            File fileDir1 = getApplicationContext().getDir(type + File.pathSeparator + id, MODE_PRIVATE);
+            Log.d("COMENTS1", "save2");
             if (!fileDir1.exists()) fileDir1.mkdirs();
-            File file = new File(fileDir1, id+".txt");
+            Log.d("COMENTS1", "save3");
+            long time = new GregorianCalendar().getTimeInMillis();
+            Log.d("COMENTS1", "save4");
+            File file = new File(fileDir1, time+".txt");
+            Log.d("COMENTS1", "save5");
             if (!file.exists()) file.createNewFile();
+            Log.d("COMENTS1", "save6");
             BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file)));
+            Log.d("COMENTS1", "save7");
             // пишем данные
             bw.write(text.getText().toString());
+            Log.d("COMENTS1", "save8");
             // закрываем поток
             bw.close();
+            return time;
+
 
         }
         catch (Exception e){
                 Log.e("openException", e.toString());
         }
+        return -1;
     }
+
+    private void returnResult(long time){
+        if (time == -1) return;
+        Intent resultIntent = new Intent();
+        Log.d("COMENTS1", "save9");
+        resultIntent.putExtra("time", time+"");
+        Log.d("COMENTS1", "save10");
+        setResult(RESULT_OK, resultIntent);
+        Log.d("COMENTS1", "save11");
+
+    }
+
+
 }

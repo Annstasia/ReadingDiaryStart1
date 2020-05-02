@@ -7,22 +7,14 @@
     tools:context=".Coments">
 
     <com.google.android.material.textfield.TextInputLayout
-        android:layout_width="409dp"
-        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         tools:layout_editor_absoluteX="1dp"
         tools:layout_editor_absoluteY="122dp"
         tools:ignore="MissingConstraints">
 
     </com.google.android.material.textfield.TextInputLayout>
 
-    <com.google.android.material.textfield.TextInputEditText
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Глава 1."
-        tools:layout_editor_absoluteX="-1dp"
-        tools:layout_editor_absoluteY="109dp"
-        tools:ignore="MissingConstraints"
-        android:id="@+id/editTextComments"/>
 
     <TextView
         android:id="@+id/textView12"
@@ -32,4 +24,16 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <com.google.android.material.textfield.TextInputEditText
+        android:id="@+id/editTextComments"
+        android:layout_width="match_parent"
+
+        android:layout_height="match_parent"
+        android:hint="Глава 1."
+        android:textAlignment="textStart"
+        android:textDirection="firstStrong"
+        tools:ignore="MissingConstraints"
+        tools:layout_editor_absoluteX="-1dp"
+        tools:layout_editor_absoluteY="109dp" />
 </androidx.constraintlayout.widget.ConstraintLayout>
