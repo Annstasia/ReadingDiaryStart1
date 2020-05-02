@@ -273,19 +273,12 @@ public class CatalogActivity extends AppCompatActivity {
                 NoteTable.COLUMN_TITLE,
                 NoteTable.COLUMN_RATING
         };
-        String[] titles = new String[title.length()];
-        titles[0] = title;
-        for (int i = 1; i < titles.length - 2; i++){
-            titles[i] = title.substring(0, i) + "%" + title.substring(i + 1, titles.length - 1);
-        }
-        titles[titles.length - 1] = title.substring(0, titles.length - 1) + "%";
+
         Cursor cursor = sdb.query(
-                true,
                 NoteTable.TABLE_NAME,
                 projection,
-                NoteTable.COLUMN_TITLE + " LIKE ?",
-                new String[]{title},
-                null,
+                NoteTable.COLUMN_TITLE + " = ?",
+                new String[] {title},
                 null,
                 null,
                 null);
@@ -294,6 +287,43 @@ public class CatalogActivity extends AppCompatActivity {
         int authorColumnIndex = cursor.getColumnIndex(NoteTable.COLUMN_AUTHOR);
         int titleColumnIndex = cursor.getColumnIndex(NoteTable.COLUMN_TITLE);
         int ratingColumnIndex = cursor.getColumnIndex(NoteTable.COLUMN_RATING);
+        while (cursor.moveToNext()) {
+            int currentID = cursor.getInt(idColumnIndex);
+            String currentPath = cursor.getString(pathColumnIndex);
+            String currentAuthor = cursor.getString(authorColumnIndex);
+            String currentTitle = cursor.getString(titleColumnIndex);
+            double currentRating = Double.valueOf(cursor.getString(ratingColumnIndex));
+            notes.add(new RealNote(currentID, currentPath, currentAuthor, currentTitle, currentRating));
+        }
+        cursor.close();
+
+        String[] titles = new String[title.length() + 1];
+        titles[0] = title;
+        titles[1] = "_" + title.substring(1);
+        String quest = NoteTable.COLUMN_TITLE + "!= ? AND (";
+        quest += NoteTable.COLUMN_TITLE + " LIKE ?" + " OR ";
+        for (int i = 2; i < titles.length - 1; i++){
+            titles[i] = title.substring(0, i - 1) + "%" + title.substring(i, title.length());
+            quest += NoteTable.COLUMN_TITLE + " LIKE ?" + " OR ";
+        }
+
+        titles[titles.length - 1] = title.substring(0, title.length() - 1) + "%";
+        quest += NoteTable.COLUMN_TITLE + " LIKE ?)";
+
+
+        cursor = sdb.query(
+                NoteTable.TABLE_NAME,
+                projection,
+                quest,
+                titles,
+                null,
+                null,
+                null);
+        idColumnIndex = cursor.getColumnIndex(NoteTable._ID);
+        pathColumnIndex = cursor.getColumnIndex(NoteTable.COLUMN_PATH);
+        authorColumnIndex = cursor.getColumnIndex(NoteTable.COLUMN_AUTHOR);
+        titleColumnIndex = cursor.getColumnIndex(NoteTable.COLUMN_TITLE);
+        ratingColumnIndex = cursor.getColumnIndex(NoteTable.COLUMN_RATING);
         while (cursor.moveToNext()) {
             int currentID = cursor.getInt(idColumnIndex);
             String currentPath = cursor.getString(pathColumnIndex);
