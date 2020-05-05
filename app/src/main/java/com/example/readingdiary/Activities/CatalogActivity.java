@@ -1,4 +1,4 @@
-package com.example.readingdiary;
+package com.example.readingdiary.Activities;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -14,18 +14,29 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.os.Build;
 import android.os.Bundle;
+import android.os.FileUtils;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
-//import android.widget.Toolbar;
 
+import com.example.readingdiary.Classes.Directory;
+import com.example.readingdiary.Classes.Note;
+import com.example.readingdiary.Classes.RealNote;
+import com.example.readingdiary.R;
+import com.example.readingdiary.adapters.CatalogButtonAdapter;
+import com.example.readingdiary.adapters.CatalogSortsSpinnerAdapter;
+import com.example.readingdiary.adapters.RecyclerViewAdapter;
 import com.example.readingdiary.data.LiteratureContract;
 import com.example.readingdiary.data.LiteratureContract.NoteTable;
 import com.example.readingdiary.data.OpenHelper;
@@ -33,8 +44,6 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.List;
-
 
 
 public class CatalogActivity extends AppCompatActivity {
@@ -45,22 +54,22 @@ public class CatalogActivity extends AppCompatActivity {
     String parent = "./";
     ArrayList<Note> notes;
     ArrayList<String> buttons;
-    ArrayList<String> directories;
+//    ArrayList<String> directories;
     RecyclerView recyclerView;
     RecyclerView buttonView;
     CatalogButtonAdapter buttonAdapter;
     CatalogSortsSpinnerAdapter sortsAdapter;
+    Button findButton;
+    EditText findText;
     ArrayList<String> sortsList;
-
-    String sortTitles1 = "Сортировка по названиям в лексикографическом порядке";
-    String sortTitles2 = "Сортировка по названиям в обратном лексикографическим порядке";
-    String sortAuthors1 = "Сортировка по автору в лексиграфическом порядке";
-    String sortAuthors2 = "Сортировка по автору в обратном лексиграфическим порядке";
-    String sortRating1 = "Сортировка по возрастанию рейтинга";
-    String sortRating2 = "Сортировка по убыванию рейтинга";
+    Spinner sortsSpinner;
+    Toolbar toolbar;
     String comp="";
+    String sortTitles1, sortTitles2, sortAuthors1, sortAuthors2, sortRating1, sortRating2;
     int order;
     int startPos;
+    int NOTE_REQUEST_CODE = 12345;
+    int CREATE_NOTE_REQUEST_CODE = 12346;
 
 
 
@@ -98,79 +107,11 @@ public class CatalogActivity extends AppCompatActivity {
         notes = new ArrayList<Note>(); // список того, что будет отображаться в каталоге.
         buttons = new ArrayList<String>(); // Список пройденный каталогов до текущего
         initSortsList();
+        findViews();
         buttons.add(parent);
-
-        recyclerView = (RecyclerView) findViewById(R.id.recyclerViewCatalog);  // здесь будут отображаться каталоги и файлы notes
-        buttonView = (RecyclerView) findViewById(R.id.buttonViewCatalog);  // здесь будут отображаться пройденные поддиректории buttons
         selectAll(); // чтение данных из бд
-        createRecyclerView(); // создание и присоединение адаптеров для recyclerView и buttonView
 
-        Spinner sortsSpinner = (Spinner) findViewById(R.id.spinnerSorts);
-        sortsAdapter = new CatalogSortsSpinnerAdapter(this, sortsList);
-        sortsSpinner.setAdapter(sortsAdapter);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar2);
-
-        Button findButton = (Button) findViewById(R.id.findButton);
-        final EditText findText = (EditText) findViewById(R.id.findText);
-
-
-        // Обработчик нажатия на элемент адаптера каталогов
-        mAdapter.setOnItemClickListener(new RecyclerViewAdapter.OnItemClickListener() {
-            @Override
-            public void onItemClick(int position) {
-                // В notes хранятся объекты двух классов, имплементирующих Note - RealNote и Directory
-                // RealNote - собственно запись пользователя. При клике нужно перейти к записи, т.е к NoteActivity
-                // Directory - директория. При клике нужно перейти в эту директорию.
-                int type = notes.get(position).getItemType();
-                if (type == 0){
-                    RealNote realNote = (RealNote) notes.get(position);
-                    Intent intent = new Intent(CatalogActivity.this, NoteActivity.class);
-                    // чтобы понять какую запись нужно отобразить в NoteActivity, запихиваем в intent id записи из бд
-                    intent.putExtra("id", realNote.getID());
-                    startActivityForResult(intent, 12345); // в NoteActivity пользователь может изменить путь.
-                    //Если изменит, то вернется intent, чтобы можно было изменить отображение каталогов
-                }
-                if (type == 1){
-                    Directory directory = (Directory) notes.get(position);
-                    parent = directory.getDirectory(); // устанавливаем директорию, на которую нажали в качестве отправной
-                    notes.clear();
-                    buttons.add(parent);
-                    buttonAdapter.notifyDataSetChanged();
-                    selectAll(); // выбираем новые данные из бд
-                    mAdapter.notifyDataSetChanged();
-                }
-            }
-        });
-
-        sortsSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                String clickedItem = (String) parent.getItemAtPosition(position);
-//                String clickedCountryName = clickedItem.getCountryName();
-                startSort(clickedItem);
-                Toast.makeText(getApplicationContext(), clickedItem + " selected", Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
-        });
-
-
-        // адаптер отвесает за вывод пройденных директорий сверху и перемещение обратно.
-        // При нажатии на путь перемещается в соответствующую директорию
-        buttonAdapter.setOnItemClickListener(new CatalogButtonAdapter.OnItemClickListener() {
-            @Override
-            public void onItemClick(int position) {
-                parent = buttons.get(position);
-                reloadButtonsView();
-                reloadRecyclerView();
-
-
-            }
-        });
-
+        setAdapters();
 
         // Кнопка добавление новой активности
         FloatingActionButton addNote = (FloatingActionButton) findViewById(R.id.addNote);
@@ -178,27 +119,52 @@ public class CatalogActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 //                // Возвращается intent, если пользователь действительно добавил активность
-//                Intent intent = new Intent(CatalogActivity.this, AddNoteActivity.class);
-//                startActivityForResult(intent, 12346);
                 Intent intent = new Intent(CatalogActivity.this, EditNoteActivity.class);
-                startActivityForResult(intent, 12346);
+                startActivityForResult(intent, CREATE_NOTE_REQUEST_CODE);
 
 
             }
         });
 
-        findButton.setOnClickListener(new View.OnClickListener() {
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+//        findText.setCursorVisible(false);
+//        findText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+//            @Override
+//            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+//                findText.setCursorVisible(false);
+//                Log.d("EVENT1", event.toString());
+//                return false;
+//            }
+//        });
+
+        findText.setCursorVisible(false);
+        findText.setOnTouchListener(new View.OnTouchListener() {
             @Override
-            public void onClick(View v) {
-                notes.clear();
-//                buttons.clear();
-                selectTitle(findText.getText().toString());
-                mAdapter.notifyDataSetChanged();
-//                buttonAdapter.notifyDataSetChanged();
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_UP){
+                    findText.setCursorVisible(true);
+                }
+                return false;
             }
         });
+
+
+
 
     }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        if (event.getAction() == MotionEvent.ACTION_DOWN){
+//            getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+            InputMethodManager imm = (InputMethodManager) getSystemService(getApplicationContext().INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(getWindow().getDecorView().getWindowToken(), 0);
+            findText.clearFocus();
+            findText.setCursorVisible(false);
+        }
+        return super.dispatchTouchEvent(event);
+    }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu){
@@ -207,7 +173,77 @@ public class CatalogActivity extends AppCompatActivity {
         return true;
     }
 
-    public void selectAll() {
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (data != null && requestCode == NOTE_REQUEST_CODE){
+            // если изменился путь до записи, добавилась новая запись, то переходим к этой записи
+            if (data.getExtras().get("deleted") != null){
+                long id = Long.parseLong(data.getExtras().get("id").toString());
+                int index = deleteNote(id);
+                if (index != -1){
+                    mAdapter.notifyItemRemoved(index);
+
+                }
+
+//                reloadRecyclerView();
+//                reloadButtonsView();
+            }
+
+            if (data.getExtras().get("path") != null){
+                parent = data.getExtras().get("path").toString();
+                reloadRecyclerView();
+                reloadButtonsView();
+            }
+
+
+        }
+        if (requestCode==CREATE_NOTE_REQUEST_CODE && resultCode == RESULT_OK){
+            if ((data.getExtras().get("deleted") == null)){
+                Intent intent = new Intent(CatalogActivity.this, NoteActivity.class); // вызов активности записи
+                intent.putExtra("id", data.getExtras().get("id").toString()); // передаем id активности в бд, чтобы понять какую активность надо показывать
+                intent.putExtra("changed", "true");
+                startActivityForResult(intent, NOTE_REQUEST_CODE);
+            }
+
+        }
+
+
+
+    }
+
+    private void deleteFileDir(String path1, long id){
+        File fileDir1 = getApplicationContext().getDir(path1 + File.pathSeparator + id, MODE_PRIVATE);
+        if (!fileDir1.exists()) return;
+
+        File files1[] = fileDir1.listFiles();
+        if (files1 != null){
+            for (File file : files1){
+                file.delete();
+            }
+        }
+        fileDir1.delete();
+    }
+
+    private int deleteNote(long id){
+        int index = -1;
+        for (int i = 0; i < notes.size(); i++){
+            if (notes.get(i).getID() == id){
+                index = i;
+                break;
+            }
+        }
+        if (index != -1){
+            notes.remove(index);
+        }
+        deleteFileDir(getResources().getString(R.string.imagesDir), id);
+        deleteFileDir(getResources().getString(R.string.commentDir), id);
+        deleteFileDir(getResources().getString(R.string.descriptionDir), id);
+        deleteFileDir(getResources().getString(R.string.quoteDir), id);
+        return index;
+    }
+
+    private void selectAll() {
 
         sdb = dbHelper.getReadableDatabase();
 
@@ -265,7 +301,7 @@ public class CatalogActivity extends AppCompatActivity {
 
     }
 
-    public void selectTitle(String title){
+    private void selectTitle(String title){
         String[] projection = {
                 NoteTable._ID,
                 NoteTable.COLUMN_PATH,
@@ -336,26 +372,16 @@ public class CatalogActivity extends AppCompatActivity {
 
     }
 
-    protected void createRecyclerView(){
-        // Подключение адаптеров и не только к recyclerView и buttonView
-        mAdapter = new RecyclerViewAdapter(notes);
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-        RecyclerView.ItemAnimator itemAnimator = new DefaultItemAnimator();
-        recyclerView.setAdapter(mAdapter);
-        recyclerView.setLayoutManager(layoutManager);
-        recyclerView.setItemAnimator(itemAnimator);
-
-        buttonAdapter = new CatalogButtonAdapter(buttons);
-        LinearLayoutManager layoutManager1 = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
-        RecyclerView.ItemAnimator itemAnimator1 = new DefaultItemAnimator();
-        buttonView.setAdapter(buttonAdapter);
-        buttonView.setLayoutManager(layoutManager1);
-        buttonView.setItemAnimator(itemAnimator1);
-
+    private void setSortTitles(){
+        sortTitles1 = "Сортировка по названиям в лексикографическом порядке";
+        sortTitles2 = "Сортировка по названиям в обратном лексикографическим порядке";
+        sortAuthors1 = "Сортировка по автору в лексиграфическом порядке";
+        sortAuthors2 = "Сортировка по автору в обратном лексиграфическим порядке";
+        sortRating1 = "Сортировка по возрастанию рейтинга";
+        sortRating2 = "Сортировка по убыванию рейтинга";
     }
 
-
-    public void initSortsList(){
+    private void initSortsList(){
         sortsList = new ArrayList<>();
         sortsList.add("");
         sortsList.add("Сортировка по названиям в лексикографическом порядке");
@@ -366,14 +392,14 @@ public class CatalogActivity extends AppCompatActivity {
         sortsList.add("Сортировка по убыванию рейтинга");
     }
 
-    protected void reloadRecyclerView(){
+    private void reloadRecyclerView(){
         // перезагрузка recyclerView. Удаляются все элементы notes, выбираются новые из бд
         notes.clear();
         selectAll();
         mAdapter.notifyDataSetChanged();
     }
 
-    protected void reloadButtonsView(){
+    private void reloadButtonsView(){
         // перезагрузка buttonView. Удаляются все элементы button, выбираются новые из текущего пути
         buttons.clear();
         String pathTokens[] = (parent).split("/");
@@ -389,29 +415,83 @@ public class CatalogActivity extends AppCompatActivity {
         buttonAdapter.notifyDataSetChanged();
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-//        Log.d("DATA1", data.toString());
-//        Log.d("DATA1", data.getExtras().get("path").toString());
-        if (data != null && data.getExtras().get("path") != null){
-            // если изменился путь до записи, добавилась новая запись, то переходим к этой записи
-            parent = data.getExtras().get("path").toString();
-            reloadRecyclerView();
-            reloadButtonsView();
-        }
-        if (requestCode==12346 && resultCode == RESULT_OK){
-            Intent intent = new Intent(CatalogActivity.this, NoteActivity.class); // вызов активности записи
-            intent.putExtra("id", data.getExtras().get("id").toString()); // передаем id активности в бд, чтобы понять какую активность надо показывать
-            startActivity(intent);
-        }
 
-
-
+    private void findViews(){
+        recyclerView = (RecyclerView) findViewById(R.id.recyclerViewCatalog);  // здесь будут отображаться каталоги и файлы notes
+        buttonView = (RecyclerView) findViewById(R.id.buttonViewCatalog);  // здесь будут отображаться пройденные поддиректории buttons
+        sortsSpinner = (Spinner) findViewById(R.id.spinnerSorts);
+        toolbar = (Toolbar) findViewById(R.id.toolbar2);
+        findButton = (Button) findViewById(R.id.findButton);
+        findText = (EditText) findViewById(R.id.findText);
     }
 
+    private void setAdapters(){
+        mAdapter = new RecyclerViewAdapter(notes);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        RecyclerView.ItemAnimator itemAnimator = new DefaultItemAnimator();
+        recyclerView.setAdapter(mAdapter);
+        recyclerView.setLayoutManager(layoutManager);
+        recyclerView.setItemAnimator(itemAnimator);
+        mAdapter.setOnItemClickListener(new RecyclerViewAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(int position) {
+                // В notes хранятся объекты двух классов, имплементирующих Note - RealNote и Directory
+                // RealNote - собственно запись пользователя. При клике нужно перейти к записи, т.е к NoteActivity
+                // Directory - директория. При клике нужно перейти в эту директорию.
+                int type = notes.get(position).getItemType();
+                if (type == 0){
+                    RealNote realNote = (RealNote) notes.get(position);
+                    Intent intent = new Intent(CatalogActivity.this, NoteActivity.class);
+                    // чтобы понять какую запись нужно отобразить в NoteActivity, запихиваем в intent id записи из бд
+                    intent.putExtra("id", realNote.getID());
+                    startActivityForResult(intent, NOTE_REQUEST_CODE); // в NoteActivity пользователь может изменить путь.
+                    //Если изменит, то вернется intent, чтобы можно было изменить отображение каталогов
+                }
+                if (type == 1){
+                    Directory directory = (Directory) notes.get(position);
+                    parent = directory.getDirectory(); // устанавливаем директорию, на которую нажали в качестве отправной
+                    notes.clear();
+                    buttons.add(parent);
+                    buttonAdapter.notifyDataSetChanged();
+                    selectAll(); // выбираем новые данные из бд
+                    mAdapter.notifyDataSetChanged();
+                }
+            }
+        });
 
-    public void startSort(String sortType) {
+
+        buttonAdapter = new CatalogButtonAdapter(buttons);
+        LinearLayoutManager layoutManager1 = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
+        RecyclerView.ItemAnimator itemAnimator1 = new DefaultItemAnimator();
+        buttonView.setAdapter(buttonAdapter);
+        buttonView.setLayoutManager(layoutManager1);
+        buttonView.setItemAnimator(itemAnimator1);
+        buttonAdapter.setOnItemClickListener(new CatalogButtonAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(int position) {
+                parent = buttons.get(position);
+                reloadButtonsView();
+                reloadRecyclerView();
+            }
+        });
+
+        sortsAdapter = new CatalogSortsSpinnerAdapter(this, sortsList);
+        sortsSpinner.setAdapter(sortsAdapter);
+        sortsSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String clickedItem = (String) parent.getItemAtPosition(position);
+                startSort(clickedItem);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+    }
+    
+
+    private void startSort(String sortType) {
         if (sortType.equals(sortTitles1)){
             comp = "title";
             order = 1;
@@ -442,7 +522,7 @@ public class CatalogActivity extends AppCompatActivity {
 
     }
 
-    public void quickSort(int from, int to) {
+    private void quickSort(int from, int to) {
         if (from < to) {
             int divideIndex;
             if (comp != "rating"){
@@ -514,7 +594,7 @@ public class CatalogActivity extends AppCompatActivity {
     }
 
 
-    public String getComparable(RealNote realNote){
+    private String getComparable(RealNote realNote){
         if (comp.equals("title")){
             return realNote.getTitle();
         }

@@ -1,4 +1,4 @@
-package com.example.readingdiary;
+package com.example.readingdiary.Activities;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -12,7 +12,9 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
-import org.w3c.dom.Comment;
+import com.example.readingdiary.Classes.VariousNotes;
+import com.example.readingdiary.R;
+import com.example.readingdiary.adapters.VariousViewAdapter;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -20,7 +22,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.OutputStreamWriter;
-import java.nio.file.Path;
 import java.util.ArrayList;
 
 public class VariousShow extends AppCompatActivity {
@@ -40,70 +41,86 @@ public class VariousShow extends AppCompatActivity {
         Bundle args = getIntent().getExtras();
         id = args.get("id").toString();
         type = args.get("type").toString();
-        fileDir1 = getApplicationContext().getDir(type + File.pathSeparator + id, MODE_PRIVATE);
-//        if (!fileDir1.exists()) fileDir1.mkdirs();
-
         variousNotes = new ArrayList<>();
+        fileDir1 = getApplicationContext().getDir(type + File.pathSeparator + id, MODE_PRIVATE);
         openNotes();
-        recyclerView = (RecyclerView) findViewById(R.id.various_recycler_view);
-        viewAdapter = new VariousViewAdapter(variousNotes);
+        findViews();
+        setAdapters();
+        setButtons();
+    }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        try{
+            if (requestCode == ADD_VIEW_RESULT_CODE && resultCode == RESULT_OK){
+                Bundle args = data.getExtras();
+                long time = Long.parseLong(args.get("time").toString());
+                File file = new File(fileDir1, time+".txt");
+                BufferedReader br = new BufferedReader(new FileReader(file));
+                StringBuilder str = new StringBuilder();
+                String line;
+                while ((line = br.readLine()) != null){
+                    str.append(line);
+                    str.append('\n');
+                }
+                variousNotes.add(new VariousNotes(str.toString(), file.getAbsolutePath(), time, false));
+                viewAdapter.notifyDataSetChanged();
+            }
+        }
+        catch (Exception e){
+            Log.e("resultShowException", e.toString());
+        }
+
+    }
+
+    private void findViews(){
+        recyclerView = (RecyclerView) findViewById(R.id.various_recycler_view);
+    }
+
+    private void setAdapters(){
+        viewAdapter = new VariousViewAdapter(variousNotes);
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         RecyclerView.ItemAnimator itemAnimator = new DefaultItemAnimator();
-
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setItemAnimator(itemAnimator);
         recyclerView.setAdapter(viewAdapter);
+    }
 
+    private void setButtons(){
         Button addVariousItem = (Button) findViewById(R.id.addVariousItem);
         addVariousItem.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(VariousShow.this, Coments.class);
+                Intent intent = new Intent(VariousShow.this, VariousNotebook.class);
                 intent.putExtra("id", id);
                 intent.putExtra("type", type);
-                Log.d("COMENTS1", "add");
                 startActivityForResult(intent, ADD_VIEW_RESULT_CODE);
             }
         });
-        viewAdapter.notifyDataSetChanged();
-
-
-
     }
+
 
     private void openNotes(){
         try{
 
 
             File[] files = fileDir1.listFiles();
-            Log.d("openNotes1", "nullable");
             if (files != null) {
-                Log.d("openNotes1", "notnull " + files.length);
-//                Log.d("openNotes1", "notnull " + files[0].getAbsolutePath());
-
                 for (int i = 0; i < files.length; i++) {
-                    Log.d("openNotes1", "cycle1");
                     BufferedReader br = new BufferedReader(new FileReader(files[i]));
-                    Log.d("openNotes1", "cycle1");
                     StringBuilder str = new StringBuilder();
-                    Log.d("openNotes1", "cycle1");
                     String line;
-                    Log.d("openNotes1", "cycle1");
                     while ((line = br.readLine()) != null) {
                         str.append(line);
                         str.append('\n');
                     }
-                    Log.d("openNotes1", "cycle1");
                     String[] pathTokens = files[i].getAbsolutePath().split(File.pathSeparator);
-    //                String timeStr = Long.parseLong(pathTokens[pathTokens.length - 1].split(".")[0]);
-                    Log.d("openNotes1", pathTokens[pathTokens.length - 1]);
-                    Log.d("openNotes1", pathTokens[pathTokens.length - 1].split("\\.")[0].split("/")[1]);
+
 
                     variousNotes.add(new VariousNotes(str.toString(), files[i].getAbsolutePath(),
                             Long.parseLong(pathTokens[pathTokens.length - 1].split("\\.")[0].split("/")[1]),
                             false));
-                    Log.d("openNotes1", variousNotes.size() +"");
 
                 }
             }
@@ -133,38 +150,4 @@ public class VariousShow extends AppCompatActivity {
         }
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        try{
-            Log.d("COMENTS1", "result1");
-            if (requestCode == ADD_VIEW_RESULT_CODE){
-                Log.d("COMENTS1", "result2");
-                Bundle args = data.getExtras();
-                Log.d("COMENTS1", "result3");
-                long time = Long.parseLong(args.get("time").toString());
-                Log.d("COMENTS1", "result4");
-                File file = new File(fileDir1, time+".txt");
-                Log.d("COMENTS1", "result5");
-                BufferedReader br = new BufferedReader(new FileReader(file));
-                Log.d("COMENTS1", "result6");
-                StringBuilder str = new StringBuilder();
-                Log.d("COMENTS1", "result7");
-                String line;
-                Log.d("COMENTS1", "result8");
-                while ((line = br.readLine()) != null){
-                    str.append(line);
-                    str.append('\n');
-                }
-                Log.d("COMENTS1", "result9");
-                variousNotes.add(new VariousNotes(str.toString(), file.getAbsolutePath(), time, false));
-                Log.d("COMENTS1", "result10");
-                viewAdapter.notifyDataSetChanged();
-            }
-        }
-        catch (Exception e){
-            Log.e("resultShowException", e.toString());
-        }
-
-    }
 }

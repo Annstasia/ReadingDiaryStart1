@@ -1,4 +1,6 @@
-package com.example.readingdiary;
+package com.example.readingdiary.adapters;
+
+
 
 //package com.example.readingdiary;
 
@@ -9,14 +11,17 @@ import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.readingdiary.R;
+import com.example.readingdiary.Classes.VariousNotes;
+
 import java.util.List;
 
 
 // Адаптор путей (кнопочки, для быстрого перемещения назад)
-public class CatalogButtonAdapter extends RecyclerView.Adapter<CatalogButtonAdapter.ViewHolder>{
+public class VariousViewAdapter extends RecyclerView.Adapter<VariousViewAdapter.ViewHolder>{
 
-    private List<String> buttons;
-    private CatalogButtonAdapter.OnItemClickListener mListener;
+    private List<VariousNotes> buttons;
+    private VariousViewAdapter.OnItemClickListener mListener;
     public interface OnItemClickListener{
         void onItemClick(int position);
     }
@@ -26,7 +31,7 @@ public class CatalogButtonAdapter extends RecyclerView.Adapter<CatalogButtonAdap
         mListener = listener;
     }
 
-    public CatalogButtonAdapter(List<String> buttons) {
+    public VariousViewAdapter(List<VariousNotes> buttons) {
         this.buttons = buttons;
     }
 
@@ -36,7 +41,7 @@ public class CatalogButtonAdapter extends RecyclerView.Adapter<CatalogButtonAdap
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
         View v;
-        v = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.recycler_catalog_button, viewGroup, false);
+        v = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.various_view_item, viewGroup, false);
         ViewHolder vh = new ViewHolder(v);
 //        v.setOnClickListener(this);
         return vh;
@@ -47,8 +52,7 @@ public class CatalogButtonAdapter extends RecyclerView.Adapter<CatalogButtonAdap
      */
     @Override
     public void onBindViewHolder(ViewHolder viewHolder, int i) {
-        String tokens[] = buttons.get(i).split("/");
-        viewHolder.path1.setText(tokens[tokens.length - 1] + " > ");
+        viewHolder.textView.setText(buttons.get(i).getText());
     }
 
     @Override
@@ -72,10 +76,10 @@ public class CatalogButtonAdapter extends RecyclerView.Adapter<CatalogButtonAdap
      */
 
     class ViewHolder extends RecyclerView.ViewHolder {
-        private TextView path1;
+        private TextView textView;
         public ViewHolder(View itemView) {
             super(itemView);
-            path1 = (TextView) itemView.findViewById(R.id.catalog_button);
+            textView = (TextView) itemView.findViewById(R.id.variousTextView);
 
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override

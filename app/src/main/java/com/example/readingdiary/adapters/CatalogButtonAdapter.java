@@ -1,6 +1,4 @@
-package com.example.readingdiary;
-
-
+package com.example.readingdiary.adapters;
 
 //package com.example.readingdiary;
 
@@ -11,14 +9,16 @@ import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.readingdiary.R;
+
 import java.util.List;
 
 
 // Адаптор путей (кнопочки, для быстрого перемещения назад)
-public class VariousViewAdapter extends RecyclerView.Adapter<VariousViewAdapter.ViewHolder>{
+public class CatalogButtonAdapter extends RecyclerView.Adapter<CatalogButtonAdapter.ViewHolder>{
 
-    private List<VariousNotes> buttons;
-    private VariousViewAdapter.OnItemClickListener mListener;
+    private List<String> buttons;
+    private CatalogButtonAdapter.OnItemClickListener mListener;
     public interface OnItemClickListener{
         void onItemClick(int position);
     }
@@ -28,7 +28,7 @@ public class VariousViewAdapter extends RecyclerView.Adapter<VariousViewAdapter.
         mListener = listener;
     }
 
-    public VariousViewAdapter(List<VariousNotes> buttons) {
+    public CatalogButtonAdapter(List<String> buttons) {
         this.buttons = buttons;
     }
 
@@ -38,7 +38,7 @@ public class VariousViewAdapter extends RecyclerView.Adapter<VariousViewAdapter.
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
         View v;
-        v = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.various_view_item, viewGroup, false);
+        v = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.recycler_catalog_button, viewGroup, false);
         ViewHolder vh = new ViewHolder(v);
 //        v.setOnClickListener(this);
         return vh;
@@ -49,7 +49,8 @@ public class VariousViewAdapter extends RecyclerView.Adapter<VariousViewAdapter.
      */
     @Override
     public void onBindViewHolder(ViewHolder viewHolder, int i) {
-        viewHolder.textView.setText(buttons.get(i).getText());
+        String tokens[] = buttons.get(i).split("/");
+        viewHolder.path1.setText(tokens[tokens.length - 1] + " > ");
     }
 
     @Override
@@ -73,10 +74,10 @@ public class VariousViewAdapter extends RecyclerView.Adapter<VariousViewAdapter.
      */
 
     class ViewHolder extends RecyclerView.ViewHolder {
-        private TextView textView;
+        private TextView path1;
         public ViewHolder(View itemView) {
             super(itemView);
-            textView = (TextView) itemView.findViewById(R.id.variousTextView);
+            path1 = (TextView) itemView.findViewById(R.id.catalog_button);
 
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override

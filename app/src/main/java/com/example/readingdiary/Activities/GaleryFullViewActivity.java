@@ -1,8 +1,7 @@
-package com.example.readingdiary;
+package com.example.readingdiary.Activities;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.DefaultItemAnimator;
-import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -17,8 +16,9 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.os.Handler;
-import android.widget.Toast;
 
+import com.example.readingdiary.R;
+import com.example.readingdiary.adapters.GaleryFullViewAdapter;
 import com.example.readingdiary.data.LiteratureContract;
 import com.example.readingdiary.data.OpenHelper;
 
@@ -52,7 +52,7 @@ public class GaleryFullViewActivity extends AppCompatActivity {
         images = new ArrayList<>();
         names = new ArrayList<>();
 
-        File fileDir1 = getApplicationContext().getDir("images" + File.pathSeparator + id, MODE_PRIVATE);
+        File fileDir1 = getApplicationContext().getDir(getResources().getString(R.string.imagesDir) + File.pathSeparator + id, MODE_PRIVATE);
         File[] files = fileDir1.listFiles();
         if (files != null){
             for (int i = 0; i < files.length; i++){
@@ -143,6 +143,7 @@ public class GaleryFullViewActivity extends AppCompatActivity {
 
     private void setResultChanged(){
         // создание возвращаемого интента
+        Log.d("DELETEIMAGE1", "resultChanged");
         Intent returnIntent = new Intent();
         returnIntent.putExtra("changed", changed);
         setResult(RESULT_OK, returnIntent);

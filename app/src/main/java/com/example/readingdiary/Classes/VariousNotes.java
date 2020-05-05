@@ -1,4 +1,4 @@
-package com.example.readingdiary;
+package com.example.readingdiary.Classes;
 
 public class VariousNotes {
     private String text;

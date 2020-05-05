@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:theme="@style/AppTheme.NoActionBar"
-    tools:context=".EditNoteActivity">
+    tools:context=".Activities.EditNoteActivity">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
@@ -46,42 +46,50 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ems="10"
-                android:inputType="textPersonName"/>
+                android:inputType="textPersonName"
+                android:cursorVisible="false"
+                android:focusedByDefault="false"/>
 
             <TextView
                 android:id="@+id/textView2"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="5pt"
-                android:text="Изменить заголовок" />
+                android:text="Изменить заголовок"
+                android:cursorVisible="false"/>
 
             <EditText
                 android:id="@+id/editTitleNoteActivity"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ems="10"
-                android:inputType="textPersonName" />
+                android:inputType="textPersonName"
+                android:cursorVisible="false"
+                android:focusedByDefault="false"/>
 
             <TextView
                 android:id="@+id/textView3"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="5pt"
-                android:text="Изменить автора" />
+                android:text="Изменить автора"/>
 
             <EditText
                 android:id="@+id/editAuthorNoteActivity"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ems="10"
-                android:inputType="textPersonName" />
+                android:inputType="textPersonName"
+                android:cursorVisible="false"
+                android:focusedByDefault="false"/>
 
             <TextView
                 android:id="@+id/textView4"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="5pt"
-                android:text="Изменить обложку" />
+                android:text="Изменить обложку"
+                />
 
             <ImageView
                 android:id="@+id/editCoverImage"
@@ -116,7 +124,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ems="10"
-                android:inputType="textPersonName" />
+                android:inputType="textPersonName"
+                android:cursorVisible="false"
+                android:focusedByDefault="false"/>
 
             <TextView
                 android:id="@+id/textView7"
@@ -130,7 +140,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ems="10"
-                android:inputType="textPersonName"/>
+                android:inputType="textPersonName"
+                android:cursorVisible="false"
+                android:focusedByDefault="false"/>
 
             <TextView
                 android:id="@+id/textView8"
@@ -144,7 +156,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ems="10"
-                android:inputType="textPersonName" />
+                android:inputType="textPersonName"
+                android:cursorVisible="false"
+                android:focusedByDefault="false"/>
 
             <TextView
                 android:id="@+id/textView9"
@@ -158,9 +172,15 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ems="10"
-                android:inputType="textPersonName" />
+                android:inputType="textPersonName"
+                android:cursorVisible="false"
+                android:focusedByDefault="false"/>
 
-
+            <Button
+                android:id="@+id/deleteNoteButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Button" />
 
 
         </LinearLayout>

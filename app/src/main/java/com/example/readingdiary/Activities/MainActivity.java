@@ -1,4 +1,4 @@
-package com.example.readingdiary;
+package com.example.readingdiary.Activities;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -7,7 +7,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.example.readingdiary.R;
 
 public class MainActivity extends AppCompatActivity {
     // Вообще ничего не делает. Сразу переходим в CatalogActivity

@@ -1,4 +1,4 @@
-package com.example.readingdiary;
+package com.example.readingdiary.Classes;
 
 // общий интерфей для RealNote и Directory. Нужен, чтобы оба класса могли находиться в одном recyclerView
 public interface Note{

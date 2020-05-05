@@ -1,4 +1,4 @@
-package com.example.readingdiary;
+package com.example.readingdiary.adapters;
 
 
 import android.content.Context;
@@ -13,6 +13,8 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import com.example.readingdiary.R;
 
 import java.util.ArrayList;
 

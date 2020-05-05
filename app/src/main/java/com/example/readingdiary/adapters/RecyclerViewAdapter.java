@@ -1,4 +1,4 @@
-package com.example.readingdiary;
+package com.example.readingdiary.adapters;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -6,6 +6,11 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.readingdiary.Classes.Directory;
+import com.example.readingdiary.Classes.Note;
+import com.example.readingdiary.R;
+import com.example.readingdiary.Classes.RealNote;
 
 import java.util.List;
 

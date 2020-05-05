@@ -1,4 +1,4 @@
-package com.example.readingdiary;
+package com.example.readingdiary.Activities;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -7,19 +7,13 @@ import androidx.appcompat.widget.Toolbar;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
-import android.graphics.drawable.Drawable;
-import android.icu.text.CaseMap;
-import android.net.Uri;
 import android.os.Bundle;
 
+import com.example.readingdiary.R;
 import com.example.readingdiary.data.LiteratureContract.NoteTable;
-import com.example.readingdiary.data.LiteratureContract;
 import com.example.readingdiary.data.OpenHelper;
 
-import android.os.Environment;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -29,12 +23,6 @@ import android.widget.ImageView;
 import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
 
 public class NoteActivity extends AppCompatActivity {
     TextView pathView;
@@ -47,12 +35,11 @@ public class NoteActivity extends AppCompatActivity {
     TextView shortCommentView;
     ImageView coverView;
     String imagePath;
-
     SQLiteDatabase sdb;
     OpenHelper dbHelper;
     String id;
     String path;
-    boolean change = false;
+    boolean changed = false;
     private ImageView imageView;
     private final int Pick_image = 1;
     private final int EDIT_REQUEST_CODE = 123;
@@ -73,94 +60,13 @@ public class NoteActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         Bundle args = getIntent().getExtras();
         id = args.get("id").toString();
+        if (args.get("changed") != null && args.get("changed").equals("true")){
+            changed = true;
+        }
         select(id); // Заполнение полей из бд
-//        imageView = (ImageView) findViewById(R.id.image_view);
-        Button pickImage = (Button) findViewById(R.id.galeryButton); // переход в галерею
-        pickImage.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(NoteActivity.this, GaleryActivity.class);
-                intent.putExtra("id", id);
-                startActivityForResult(intent, GALERY_REQUEST_CODE);
-//                select(id); // добавить проверку на изменение, а потом уже select
-            }
-        });
-
-        Button coments = (Button) findViewById(R.id.comentsButton);
-        coments.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(NoteActivity.this, VariousShow.class);
-                intent.putExtra("id", id);
-                intent.putExtra("type", "comments");
-                startActivityForResult(intent, COMENTS_REQUEST_CODE);
-            }
-        });
-
-        Button description = (Button) findViewById(R.id.descriptionButton);
-        description.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(NoteActivity.this, VariousShow.class);
-                intent.putExtra("id", id);
-                intent.putExtra("type", "description");
-                startActivityForResult(intent, COMENTS_REQUEST_CODE);
-            }
-        });
-
-        Button quotes = (Button) findViewById(R.id.quoteButton);
-        quotes.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(NoteActivity.this, VariousShow.class);
-                intent.putExtra("id", id);
-                intent.putExtra("type", "quotes");
-                startActivityForResult(intent, COMENTS_REQUEST_CODE);
-            }
-        });
-
-
-
-
-
+        setButtons();
     }
 
-
-    public void setViews(String path, String author, String title, String rating, String genre,
-                         String time, String place, String shortComment, String imagePath){
-        this.path = path;
-        this.authorView.setText(author);
-        this.titleView.setText(title);
-        if (rating != null){
-            this.ratingView.setRating(Float.parseFloat(rating));
-        }
-
-        this.genreView.setText(genre);
-        this.timeView.setText(time);
-        this.placeView.setText(place);
-        this.shortCommentView.setText(shortComment);
-//        File file = new File(imagePath);
-        Log.d("IMAGE1", imagePath +" !");
-        if (imagePath != null){
-            this.coverView.setImageBitmap(BitmapFactory.decodeFile(imagePath));
-            this.imagePath = imagePath;
-        }
-    }
-
-
-    public void findViews(){
-//        TextView path;
-        titleView = (TextView) findViewById(R.id.titleNoteActivity);
-        authorView = (TextView) findViewById(R.id.authorNoteActivity);
-        ratingView = (RatingBar) findViewById(R.id.ratingBar);
-        genreView = (TextView) findViewById(R.id.genre);
-        timeView = (TextView) findViewById(R.id.time);
-        placeView = (TextView) findViewById(R.id.place);
-        shortCommentView = (TextView) findViewById(R.id.shortComment);
-        coverView = (ImageView) findViewById(R.id.coverImage);
-
-
-    }
 
 
     @Override
@@ -184,11 +90,135 @@ public class NoteActivity extends AppCompatActivity {
     }
 
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (changed){
+            changedIntent();
+        }
+        super.onBackPressed();
+        // нужно сделать проверку ответа
+        finish();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode==EDIT_REQUEST_CODE){
+            if (data != null && data.getExtras() != null)
+            {
+                if (data.getExtras().get("changed") != null)
+                {
+                    changed = true;
+                }
+                if (data.getExtras().get("deleted") != null)
+                {
+                    setResult(RESULT_OK, data);
+                    finish();
+                }
+
+            }
+            select(id);
+        }
+
+        if (requestCode==GALERY_REQUEST_CODE){
+            select(id);
+        }
+
+    }
+
+    private void setViews(String path, String author, String title, String rating, String genre,
+                          String time, String place, String shortComment, String imagePath){
+        this.path = path;
+        this.authorView.setText(author);
+        this.titleView.setText(title);
+        if (rating != null){
+            this.ratingView.setRating(Float.parseFloat(rating));
+        }
+
+        this.genreView.setText(genre);
+        this.timeView.setText(time);
+        this.placeView.setText(place);
+        this.shortCommentView.setText(shortComment);
+//        File file = new File(imagePath);
+        Log.d("IMAGE1", imagePath +" !");
+        if (imagePath != null){
+            this.coverView.setImageBitmap(BitmapFactory.decodeFile(imagePath));
+            this.imagePath = imagePath;
+        }
+    }
 
 
+    private void setButtons(){
+        Button pickImage = (Button) findViewById(R.id.galeryButton); // переход в галерею
+        pickImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(NoteActivity.this, GaleryActivity.class);
+                intent.putExtra("id", id);
+                startActivityForResult(intent, GALERY_REQUEST_CODE);
+            }
+        });
+
+        Button coments = (Button) findViewById(R.id.comentsButton);
+        coments.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(NoteActivity.this, VariousShow.class);
+                intent.putExtra("id", id);
+                intent.putExtra("type", getResources().getString(R.string.commentDir));
+                startActivityForResult(intent, COMENTS_REQUEST_CODE);
+            }
+        });
+
+        Button description = (Button) findViewById(R.id.descriptionButton);
+        description.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(NoteActivity.this, VariousShow.class);
+                intent.putExtra("id", id);
+                intent.putExtra("type", getResources().getString(R.string.descriptionDir));
+                startActivityForResult(intent, COMENTS_REQUEST_CODE);
+            }
+        });
+
+        Button quotes = (Button) findViewById(R.id.quoteButton);
+        quotes.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(NoteActivity.this, VariousShow.class);
+                intent.putExtra("id", id);
+                intent.putExtra("type", getResources().getString(R.string.quoteDir));
+                startActivityForResult(intent, COMENTS_REQUEST_CODE);
+            }
+        });
+
+    }
+
+    private void findViews(){
+//        TextView path;
+        titleView = (TextView) findViewById(R.id.titleNoteActivity);
+        authorView = (TextView) findViewById(R.id.authorNoteActivity);
+        ratingView = (RatingBar) findViewById(R.id.ratingBar);
+        genreView = (TextView) findViewById(R.id.genre);
+        timeView = (TextView) findViewById(R.id.time);
+        placeView = (TextView) findViewById(R.id.place);
+        shortCommentView = (TextView) findViewById(R.id.shortComment);
+        coverView = (ImageView) findViewById(R.id.coverImage);
 
 
-    public void select(String id){
+    }
+
+    private void select(String id){
         // Выбор полей из бд
         // Сейчас тут выбор не всех полей
 
@@ -226,7 +256,6 @@ public class NoteActivity extends AppCompatActivity {
             int shortCommentIndex =  cursor.getColumnIndex(NoteTable.COLUMN_SHORT_COMMENT);
 
             while (cursor.moveToNext()) {
-                Log.d("EDIT1", "select");
                 setViews(cursor.getString(pathColumnIndex), cursor.getString(authorColumnIndex),
                         cursor.getString(titleColumnIndex), cursor.getString(ratingColumnIndex),
                         cursor.getString(genreColumnIndex), cursor.getString(timeColumnIndex),
@@ -239,43 +268,11 @@ public class NoteActivity extends AppCompatActivity {
         }
     }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
+    private void changedIntent(){
+        Intent returnIntent = new Intent();
+        returnIntent.putExtra("path", path);
+        setResult(RESULT_OK, returnIntent);
+        Log.d("qwertyu", "changeIntent");
     }
 
-    @Override
-    public void onBackPressed() {
-
-        super.onBackPressed();
-        Toast.makeText(getApplicationContext(), "onBackPressed", Toast.LENGTH_LONG).show();
-        // нужно сделать проверку ответа
-        finish();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        Toast.makeText(getApplicationContext(), "Destroy", Toast.LENGTH_LONG).show();
-        if (change){
-            Intent returnIntent = new Intent();
-            returnIntent.putExtra("path", path);
-            setResult(RESULT_OK, returnIntent);
-        }
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        Log.d("EDIT1", "all result " + id);
-        if (requestCode==EDIT_REQUEST_CODE){
-                select(id);
-        }
-
-        if (requestCode==GALERY_REQUEST_CODE){
-            Log.d("IMAGE1", "result1");
-            select(id);
-        }
-
-    }
 }

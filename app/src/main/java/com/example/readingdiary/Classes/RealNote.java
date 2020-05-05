@@ -1,9 +1,7 @@
-package com.example.readingdiary;
-
-import java.util.Comparator;
+package com.example.readingdiary.Classes;
 
 // класс для записей
-public class RealNote implements Note{
+public class RealNote implements Note {
     private String path;
     private String author;
     private String title;

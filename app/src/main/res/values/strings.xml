@@ -1,4 +1,10 @@
 <resources>
     <string name="app_name">ReadingDiary</string>
     <string name="title_activity_add_note">AddNoteActivity</string>
+    <string name="imagesDir">image</string>
+    <string name="quoteDir">quote</string>
+    <string name="commentDir">comment</string>
+    <string name="descriptionDir">description</string>
+
+
 </resources>

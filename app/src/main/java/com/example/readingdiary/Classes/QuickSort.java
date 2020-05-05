@@ -1,4 +1,4 @@
-package com.example.readingdiary;
+package com.example.readingdiary.Classes;
 
 import java.io.PrintStream;
 import java.util.ArrayList;

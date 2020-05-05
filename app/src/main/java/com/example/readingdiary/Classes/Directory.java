@@ -1,8 +1,8 @@
-package com.example.readingdiary;
+package com.example.readingdiary.Classes;
 
 
 // класс для директорий
-public class Directory implements Note{
+public class Directory implements Note {
     private long id;
     private String directory;
     private final int type = 1;
