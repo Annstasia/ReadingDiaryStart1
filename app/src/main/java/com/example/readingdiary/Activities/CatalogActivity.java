@@ -1,12 +1,12 @@
 package com.example.readingdiary.Activities;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.appcompat.widget.Toolbar;
 
 
 import android.Manifest;
@@ -15,10 +15,9 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.os.FileUtils;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
@@ -30,6 +29,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.readingdiary.Classes.DeleteFilesClass;
 import com.example.readingdiary.Classes.Directory;
 import com.example.readingdiary.Classes.Note;
 import com.example.readingdiary.Classes.RealNote;
@@ -40,6 +40,7 @@ import com.example.readingdiary.adapters.RecyclerViewAdapter;
 import com.example.readingdiary.data.LiteratureContract;
 import com.example.readingdiary.data.LiteratureContract.NoteTable;
 import com.example.readingdiary.data.OpenHelper;
+import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.File;
@@ -63,14 +64,18 @@ public class CatalogActivity extends AppCompatActivity {
     EditText findText;
     ArrayList<String> sortsList;
     Spinner sortsSpinner;
-    Toolbar toolbar;
+    MaterialToolbar toolbar;
+    TextView counterText;
     String comp="";
     String sortTitles1, sortTitles2, sortAuthors1, sortAuthors2, sortRating1, sortRating2;
     int order;
     int startPos;
     int NOTE_REQUEST_CODE = 12345;
     int CREATE_NOTE_REQUEST_CODE = 12346;
-
+    public boolean action_mode = false;
+    int count=0;
+    ArrayList<RealNote> selectionRealNotesList = new ArrayList<>();
+    ArrayList<Directory> selectionDirectoriesList = new ArrayList<>();
 
 
     @Override
@@ -108,6 +113,10 @@ public class CatalogActivity extends AppCompatActivity {
         buttons = new ArrayList<String>(); // Список пройденный каталогов до текущего
         initSortsList();
         findViews();
+        setSupportActionBar(toolbar);
+        counterText.setText("Каталог");
+//        toolbar.inflateMenu(R.menu.menu_catalog);
+
         buttons.add(parent);
         selectAll(); // чтение данных из бд
 
@@ -120,9 +129,23 @@ public class CatalogActivity extends AppCompatActivity {
             public void onClick(View view) {
 //                // Возвращается intent, если пользователь действительно добавил активность
                 Intent intent = new Intent(CatalogActivity.this, EditNoteActivity.class);
+
+                intent.putExtra("path", parent);
+                Log.d("putExtra", parent + " !");
                 startActivityForResult(intent, CREATE_NOTE_REQUEST_CODE);
 
 
+            }
+        });
+
+        findButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                notes.clear();
+//                buttons.clear();
+                selectTitle(findText.getText().toString());
+                mAdapter.notifyDataSetChanged();
+//                buttonAdapter.notifyDataSetChanged();
             }
         });
 
@@ -169,9 +192,11 @@ public class CatalogActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu){
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_note, menu);
+        getMenuInflater().inflate(R.menu.menu_catalog, menu);
         return true;
     }
+
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
@@ -183,11 +208,7 @@ public class CatalogActivity extends AppCompatActivity {
                 int index = deleteNote(id);
                 if (index != -1){
                     mAdapter.notifyItemRemoved(index);
-
                 }
-
-//                reloadRecyclerView();
-//                reloadButtonsView();
             }
 
             if (data.getExtras().get("path") != null){
@@ -195,18 +216,129 @@ public class CatalogActivity extends AppCompatActivity {
                 reloadRecyclerView();
                 reloadButtonsView();
             }
-
-
         }
         if (requestCode==CREATE_NOTE_REQUEST_CODE && resultCode == RESULT_OK){
-            if ((data.getExtras().get("deleted") == null)){
+            if ((data.getExtras().get("deleted") == null && data.getExtras().get("noNote") == null)){
                 Intent intent = new Intent(CatalogActivity.this, NoteActivity.class); // вызов активности записи
                 intent.putExtra("id", data.getExtras().get("id").toString()); // передаем id активности в бд, чтобы понять какую активность надо показывать
                 intent.putExtra("changed", "true");
                 startActivityForResult(intent, NOTE_REQUEST_CODE);
             }
+            else if (data.getExtras().get("noNote") != null){
+                parent = data.getExtras().get("path").toString();
+                reloadRecyclerView();
+                reloadButtonsView();
+            }
 
         }
+
+
+
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId()==R.id.item_delete){
+
+            action_mode=false;
+            mAdapter.setActionMode(false);
+            deleteSelectedRealNote();
+            deleteSelectedDirectories();
+            mAdapter.notifyDataSetChanged();
+//            RecyclerViewAdapter recyclerViewAdapter = (RecyclerViewAdapter) mAdapter;
+//            recyclerViewAdapter.updateAdapter(selectionList);
+            toolbar.getMenu().clear();
+            toolbar.inflateMenu(R.menu.menu_catalog);
+            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+            counterText.setText("Каталог");
+            count=0;
+//            selectionList.clear();
+
+
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    public void deleteSelectedRealNote(){
+        File fileArr[] = new File[selectionRealNotesList.size() * 4];
+        for (int i = 0; i < selectionRealNotesList.size() * 4; i+=4){
+            String id = selectionRealNotesList.get(i / 4).getID() + "";
+            sdb.delete(NoteTable.TABLE_NAME, NoteTable._ID + " = ? ", new String[]{id+""});
+            notes.remove(selectionRealNotesList.get(i / 4));
+            fileArr[i] = getApplicationContext().getDir(getResources().getString(R.string.imagesDir) + File.pathSeparator + id, MODE_PRIVATE);
+            fileArr[i + 1] = getApplicationContext().getDir(getResources().getString(R.string.descriptionDir) + File.pathSeparator + id, MODE_PRIVATE);
+            fileArr[i + 2] = getApplicationContext().getDir(getResources().getString(R.string.commentDir) + File.pathSeparator + id, MODE_PRIVATE);
+            fileArr[i + 3] = getApplicationContext().getDir(getResources().getString(R.string.quoteDir) + File.pathSeparator + id, MODE_PRIVATE);
+        }
+        DeleteFilesClass deleteClass = new DeleteFilesClass(fileArr);
+        deleteClass.start();
+
+        selectionRealNotesList.clear();
+        mAdapter.notifyDataSetChanged();
+    }
+
+    public void deleteSelectedDirectories(){
+        for (Directory directory : selectionDirectoriesList){
+            notes.remove(directory);
+            deleteDirectory(directory.getDirectory());
+//            deleteFilesInDirectory(directory.getDirectory())
+            sdb.delete(LiteratureContract.PathTable.TABLE_NAME, LiteratureContract.PathTable.COLUMN_CHILD + " = ? ",
+                    new String[]{directory.getDirectory()});
+        }
+        selectionDirectoriesList.clear();
+
+    }
+
+    public void deleteDirectory(String path){
+        String[] projection1 = {
+                LiteratureContract.PathTable._ID,
+                LiteratureContract.PathTable.COLUMN_PARENT,
+                LiteratureContract.PathTable.COLUMN_CHILD
+
+        };
+        Cursor mCursor1 = sdb.query(LiteratureContract.PathTable.TABLE_NAME, projection1,
+                LiteratureContract.PathTable.COLUMN_PARENT + " = ?", new String[] {path},
+                null, null, null);
+        int count = 0;
+        int idColumnIndex1 = mCursor1.getColumnIndex(LiteratureContract.PathTable._ID);
+        int childColumnIndex = mCursor1.getColumnIndex(LiteratureContract.PathTable.COLUMN_CHILD);
+        while (mCursor1.moveToNext()){
+//            long currentId = mCursor1.getLong(idColumnIndex1);
+//            String currentChild = mCursor1.getString(childColumnIndex);
+            deleteDirectory(mCursor1.getString(childColumnIndex));
+            count++;
+//            notes.add(new Directory(currentId, currentChild));
+        }
+        mCursor1.close();
+        sdb.delete(LiteratureContract.PathTable.TABLE_NAME, LiteratureContract.PathTable.COLUMN_PARENT + " = ?",
+                new String[]{path});
+
+        String[] projection = {
+                NoteTable._ID
+        };
+        Cursor cursor = sdb.query(
+                NoteTable.TABLE_NAME,
+                projection,
+                LiteratureContract.NoteTable.COLUMN_PATH + " = ?",
+                new String[] {path},
+                null,
+                null,
+                null);
+        int idColumnIndex = cursor.getColumnIndex(NoteTable._ID);
+        File[] arr = new File[cursor.getCount()];
+        int k = 0;
+        while (cursor.moveToNext()) {
+            int currentID = cursor.getInt(idColumnIndex);
+            File dir0 = new File(path);
+//            arr[k] = getApplicationContext().getDir(path + "/" + currentID, MODE_PRIVATE);
+            arr[k] = new File(dir0 + File.pathSeparator + currentID);
+            // Тут содержится pathSeparator, на что ide ругается
+            k++;
+            sdb.delete(NoteTable.TABLE_NAME, NoteTable._ID + "= ?", new String[]{currentID + ""});
+        }
+        cursor.close();
+        DeleteFilesClass deleteFilesClass = new DeleteFilesClass(arr);
+        deleteFilesClass.start();
 
 
 
@@ -236,10 +368,18 @@ public class CatalogActivity extends AppCompatActivity {
         if (index != -1){
             notes.remove(index);
         }
-        deleteFileDir(getResources().getString(R.string.imagesDir), id);
-        deleteFileDir(getResources().getString(R.string.commentDir), id);
-        deleteFileDir(getResources().getString(R.string.descriptionDir), id);
-        deleteFileDir(getResources().getString(R.string.quoteDir), id);
+        DeleteFilesClass deleteClass = new DeleteFilesClass(new File[]
+                {
+                        getApplicationContext().getDir(getResources().getString(R.string.imagesDir) + File.pathSeparator + id, MODE_PRIVATE),
+                        getApplicationContext().getDir(getResources().getString(R.string.quoteDir) + File.pathSeparator + id, MODE_PRIVATE),
+                        getApplicationContext().getDir(getResources().getString(R.string.descriptionDir) + File.pathSeparator + id, MODE_PRIVATE),
+                        getApplicationContext().getDir(getResources().getString(R.string.commentDir) + File.pathSeparator + id, MODE_PRIVATE)
+                });
+//        deleteClass.start();
+//        deleteFileDir(getResources().getString(R.string.imagesDir), id);
+//        deleteFileDir(getResources().getString(R.string.commentDir), id);
+//        deleteFileDir(getResources().getString(R.string.descriptionDir), id);
+//        deleteFileDir(getResources().getString(R.string.quoteDir), id);
         return index;
     }
 
@@ -415,14 +555,18 @@ public class CatalogActivity extends AppCompatActivity {
         buttonAdapter.notifyDataSetChanged();
     }
 
+    public void prepareSelection(View view, int position){
+
+    }
 
     private void findViews(){
         recyclerView = (RecyclerView) findViewById(R.id.recyclerViewCatalog);  // здесь будут отображаться каталоги и файлы notes
         buttonView = (RecyclerView) findViewById(R.id.buttonViewCatalog);  // здесь будут отображаться пройденные поддиректории buttons
         sortsSpinner = (Spinner) findViewById(R.id.spinnerSorts);
-        toolbar = (Toolbar) findViewById(R.id.toolbar2);
+        toolbar = (MaterialToolbar) findViewById(R.id.long_click_toolbar);
         findButton = (Button) findViewById(R.id.findButton);
         findText = (EditText) findViewById(R.id.findText);
+        counterText = (TextView) findViewById(R.id.counter_text);
     }
 
     private void setAdapters(){
@@ -457,7 +601,52 @@ public class CatalogActivity extends AppCompatActivity {
                     mAdapter.notifyDataSetChanged();
                 }
             }
+
+            @Override
+            public void onItemLongClick(int position) {
+                mAdapter.setActionMode(true);
+                action_mode = true;
+                counterText.setText(count + " элементов выбрано");
+                toolbar.getMenu().clear();
+                toolbar.inflateMenu(R.menu.menu_long_click);
+//                toolbar.setMenu(m);
+                mAdapter.notifyDataSetChanged();
+                getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            }
+
+            @Override
+            public void onCheckClick(int position) {
+                count++;
+                counterText.setText(count + " элементов выбрано");
+                Note note = notes.get(position);
+                if (note.getItemType()==1){
+                    selectionDirectoriesList.add((Directory) note);
+                    Toast.makeText(getApplicationContext(), selectionDirectoriesList.size() + " Directory", Toast.LENGTH_LONG).show();
+                }
+                else{
+                    selectionRealNotesList.add((RealNote) note);
+                    Toast.makeText(getApplicationContext(), selectionRealNotesList.size() + " RealNote", Toast.LENGTH_LONG).show();
+                }
+
+            }
+
+            @Override
+            public void onUncheckClick(int position) {
+                count--;
+                counterText.setText(count + " элементов выбрано");
+                Note note = notes.get(position);
+                if (note.getItemType()==1){
+                    selectionDirectoriesList.remove((Directory) note);
+                    Toast.makeText(getApplicationContext(), selectionDirectoriesList.size() + " Directory", Toast.LENGTH_LONG).show();
+                }
+                else{
+                    selectionRealNotesList.remove((RealNote) note);
+                    Toast.makeText(getApplicationContext(), selectionRealNotesList.size() + " RealNote", Toast.LENGTH_LONG).show();
+                }
+
+            }
         });
+
 
 
         buttonAdapter = new CatalogButtonAdapter(buttons);

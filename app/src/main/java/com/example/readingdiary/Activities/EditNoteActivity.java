@@ -2,6 +2,8 @@ package com.example.readingdiary.Activities;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
 import android.content.ContentValues;
 import android.content.Intent;
@@ -22,6 +24,10 @@ import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.readingdiary.Fragments.CreateWithoutNoteDialogFragment;
+import com.example.readingdiary.Fragments.DeleteDialogFragment;
+import com.example.readingdiary.Fragments.DeleteTitleAndAuthorDialogFragment;
+import com.example.readingdiary.Fragments.SaveDialogFragment;
 import com.example.readingdiary.R;
 import com.example.readingdiary.data.LiteratureContract.NoteTable;
 
@@ -33,7 +39,9 @@ import java.io.File;
 import javax.xml.transform.Result;
 import com.example.readingdiary.data.LiteratureContract.PathTable;
 
-public class EditNoteActivity extends AppCompatActivity {
+public class EditNoteActivity extends AppCompatActivity implements DeleteDialogFragment.DeleteDialogListener,
+        CreateWithoutNoteDialogFragment.CreateWithoutNoteDialogListener,
+        SaveDialogFragment.SaveDialogListener {
     EditText pathView;
     EditText titleView;
     EditText authorView;
@@ -52,6 +60,7 @@ public class EditNoteActivity extends AppCompatActivity {
     private ImageView imageView;
     private final int Pick_image = 1;
     private final int EDIT_REQUEST_CODE = 123;
+    private String[] beforeChanging;
 
 
     @Override
@@ -64,13 +73,22 @@ public class EditNoteActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         Bundle args = getIntent().getExtras();
-        if (args != null){
+
+        if (args != null && args.get("id") != null){
             id = args.get("id").toString();
             select(id);
         }
-        else{
-            path="./";
+        else if (args != null && args.get("path") != null){
+            path = args.get("path").toString();
+            beforeChanging = new String[]{path, "", "", "0.0", "", "", "", "", ""};
+            setViews(beforeChanging);
         }
+        else{
+            path = "./";
+            beforeChanging = new String[]{"./", "", "", "0.0", "", "", "", "", ""};
+            setViews(beforeChanging);
+        }
+        Log.d("putExtra", "start");
 
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
         setButtons();
@@ -96,6 +114,43 @@ public class EditNoteActivity extends AppCompatActivity {
         }
 
         return super.dispatchTouchEvent(event);
+    }
+
+    @Override
+    public void onDeleteClicked() {
+        deleteNote();
+        Intent returnIntent = new Intent();
+        returnIntent.putExtra("deleted", "true");
+        returnIntent.putExtra("id", id);
+        setResult(RESULT_OK, returnIntent);
+        finish();
+    }
+
+    @Override
+    public void onCreateWithoutNoteClicked() {
+        String path1 = pathView.getText().toString();
+        path1 = fixPath(path1);
+        if (!beforeChanging[0].equals(path1)){
+            beforeChanging[0] = path1;
+            savePaths();
+        }
+        Intent returnIntent = new Intent();
+        returnIntent.putExtra("noNote", "true");
+        returnIntent.putExtra("path", path);
+        setResult(RESULT_OK, returnIntent);
+        finish();
+    }
+
+    @Override
+    public void onSaveClicked() {
+        if (saveChanges()){
+            finish();
+        }
+    }
+
+    @Override
+    public void onNotSaveClicked() {
+        finish();
     }
 
     private void setFocuses(){
@@ -132,7 +187,6 @@ public class EditNoteActivity extends AppCompatActivity {
     }
 
     public void findViews(){
-//        TextView path;
         pathView = (EditText) findViewById(R.id.editPath);
         titleView = (EditText) findViewById(R.id.editTitleNoteActivity);
         authorView = (EditText) findViewById(R.id.editAuthorNoteActivity);
@@ -142,28 +196,34 @@ public class EditNoteActivity extends AppCompatActivity {
         placeView = (EditText) findViewById(R.id.editPlace);
         shortCommentView = (EditText) findViewById(R.id.editShortComment);
         coverView = (ImageView) findViewById(R.id.editCoverImage);
-
-
+//        changeViews = {pathView, authorView, titleView, ratingView, genreView, timeView, placeView, shortCommentView, imageView};
     }
 
-    public void setViews(String path, String author, String title, String rating, String genre,
-                         String time, String place, String shortComment, String imagePath){
-        this.pathView.setText(path);
-        if (path == null) this.path="./";
-        else this.path = path;
+    public void setViews(String[] strings){
 
-        this.authorView.setText(author);
-        this.titleView.setText(title);
-        if (rating != null){
-            this.ratingView.setRating(Float.parseFloat(rating));
+        // String path, String author, String title, String rating, String genre,
+        //                         String time, String place, String shortComment, String imagePath
+        this.pathView.setText(strings[0]);
+//        if (path == null) this.path="./";
+//        else this.path = path;
+//        beforeChanging = {this.pathView,  author, title, rating, genre, time, place, shortComment, imagePath};
+
+        this.authorView.setText(strings[1]);
+        this.titleView.setText(strings[2]);
+        if (!strings[3].equals("")){
+            this.ratingView.setRating(Float.parseFloat(strings[3]));
         }
-        this.genreView.setText(genre);
-        this.timeView.setText(time);
-        this.placeView.setText(place);
-        this.shortCommentView.setText(shortComment);
-//        File file = new File(imagePath);
-        if (imagePath != null){
-            this.coverView.setImageBitmap(BitmapFactory.decodeFile(imagePath));
+        this.genreView.setText(strings[4]);
+        this.timeView.setText(strings[5]);
+        this.placeView.setText(strings[6]);
+        this.shortCommentView.setText(strings[7]);
+////        File file = new File(imagePath);
+//        if (!imagePath.equals("")){
+//            this.coverView.setImageBitmap(BitmapFactory.decodeFile(strings[8]));
+//            this.imagePath = imagePath;
+//        }
+        if (!strings[8].equals("")){
+            this.coverView.setImageBitmap(BitmapFactory.decodeFile(strings[8]));
             this.imagePath = imagePath;
         }
     }
@@ -175,8 +235,10 @@ public class EditNoteActivity extends AppCompatActivity {
         accept.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                saveChanges();
-                finish();
+                if (saveChanges()){
+                    finish();
+                }
+
             }
         });
 
@@ -190,18 +252,22 @@ public class EditNoteActivity extends AppCompatActivity {
         deleteButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                deleteNote();
-                Intent returnIntent = new Intent();
-                returnIntent.putExtra("deleted", "true");
-                returnIntent.putExtra("id", id);
-
-                setResult(RESULT_OK, returnIntent);
-                finish();
+                openDeletDialog();
+//                deleteNote();
+//                Intent returnIntent = new Intent();
+//                returnIntent.putExtra("deleted", "true");
+//                returnIntent.putExtra("id", id);
+//                setResult(RESULT_OK, returnIntent);
+//                finish();
             }
         });
     }
 
 
+    private void openDeletDialog(){
+        DeleteDialogFragment dialog = new DeleteDialogFragment();
+        dialog.show(getSupportFragmentManager(), "deleteDialog");
+    }
 
     public void select(String id){
         // Выбор полей из бд
@@ -240,11 +306,18 @@ public class EditNoteActivity extends AppCompatActivity {
             int shortCommentIndex =  cursor.getColumnIndex(NoteTable.COLUMN_SHORT_COMMENT);
 
             while (cursor.moveToNext()) {
-                setViews(cursor.getString(pathColumnIndex), cursor.getString(authorColumnIndex),
+                beforeChanging = new String[] {cursor.getString(pathColumnIndex), cursor.getString(authorColumnIndex),
                         cursor.getString(titleColumnIndex), cursor.getString(ratingColumnIndex),
                         cursor.getString(genreColumnIndex), cursor.getString(timeColumnIndex),
                         cursor.getString(placeColumnIndex), cursor.getString(shortCommentIndex),
-                        cursor.getString(shortCommentIndex));
+                        cursor.getString(coverColumnIndex)};
+                if (beforeChanging[0] == null) beforeChanging[0] = "./";
+//                setViews(new String[] {cursor.getString(pathColumnIndex), cursor.getString(authorColumnIndex),
+//                        cursor.getString(titleColumnIndex), cursor.getString(ratingColumnIndex),
+//                        cursor.getString(genreColumnIndex), cursor.getString(timeColumnIndex),
+//                        cursor.getString(placeColumnIndex), cursor.getString(shortCommentIndex),
+//                        cursor.getString(shortCommentIndex)});
+                setViews(beforeChanging);
             }
         }
         finally{
@@ -255,8 +328,12 @@ public class EditNoteActivity extends AppCompatActivity {
         }
     }
 
-    public void saveChanges(){
+    public boolean saveChanges(){
 
+        if (authorView.getText().toString().equals("") && titleView.getText().toString().equals("")){
+            showNoTitleAndAuthorDialog();
+            return false;
+        }
         ContentValues cv = new ContentValues();
 //        cv.put(NoteTable.COLUMN_PATH, );
         String path1 = pathView.getText().toString();
@@ -270,9 +347,10 @@ public class EditNoteActivity extends AppCompatActivity {
         cv.put(NoteTable.COLUMN_TIME, timeView.getText().toString());
         cv.put(NoteTable.COLUMN_PLACE, placeView.getText().toString());
         cv.put(NoteTable.COLUMN_SHORT_COMMENT, shortCommentView.getText().toString());
+        cv.put(NoteTable.COLUMN_COVER_IMAGE, "");
 
-        if (!path.equals(path1)){
-            path = path1;
+        if (!beforeChanging[0].equals(path1)){
+            beforeChanging[0] = path1;
             savePaths();
         }
 
@@ -285,11 +363,44 @@ public class EditNoteActivity extends AppCompatActivity {
             id = sdb.insert(NoteTable.TABLE_NAME, null, cv) + "";
             insertIntent();
         }
+        return true;
+    }
+
+    private void showNoTitleAndAuthorDialog(){
+        if (id==null){
+            CreateWithoutNoteDialogFragment createDialog = new CreateWithoutNoteDialogFragment();
+            createDialog.show(getSupportFragmentManager(), "createWithoutNoteDialog");
+        }
+        else{
+            DeleteTitleAndAuthorDialogFragment dialog = new DeleteTitleAndAuthorDialogFragment();
+            dialog.show(getSupportFragmentManager(), "deleteTitleAndAuthorDialog");
+        }
+    }
+
+    public boolean checkChanges(){
+//        beforeChanging = {cursor.getString(pathColumnIndex), cursor.getString(authorColumnIndex),
+//                cursor.getString(titleColumnIndex), cursor.getString(ratingColumnIndex),
+//                cursor.getString(genreColumnIndex), cursor.getString(timeColumnIndex),
+//                cursor.getString(placeColumnIndex), cursor.getString(shortCommentIndex),
+//                cursor.getString(shortCommentIndex)};
+        Log.d("putExtra", ratingView.getRating() +"");
+        if (beforeChanging[0].equals(fixPath(pathView.getText().toString())) &&
+                beforeChanging[1].equals(authorView.getText().toString()) &&
+                beforeChanging[2].equals(titleView.getText().toString()) &&
+                beforeChanging[3].equals(ratingView.getRating()+"")  &&
+                beforeChanging[4].equals(genreView.getText().toString()) &&
+                beforeChanging[5].equals(timeView.getText().toString()) &&
+                beforeChanging[6].equals(placeView.getText().toString()) &&
+                beforeChanging[7].equals(shortCommentView.getText().toString()))
+        {
+            return false;
+        }
+        return true;
     }
 
     public void savePaths(){
         ContentValues cv = new ContentValues();
-        String pathTokens[] = ((String) path).split("/");
+        String pathTokens[] = ((String) beforeChanging[0]).split("/");
         String prev = pathTokens[0] + "/";
         for (int i = 1; i < pathTokens.length; i++){
             if (pathTokens[i].equals("")){
@@ -325,9 +436,7 @@ public class EditNoteActivity extends AppCompatActivity {
 
     public void changedIntent(){
         Intent returnIntent = new Intent();
-        returnIntent.putExtra("changed", "true");
         setResult(RESULT_OK, returnIntent);
-        Log.d("DeleteNote", "changedIntent");
     }
 
     public void insertIntent(){
@@ -338,6 +447,18 @@ public class EditNoteActivity extends AppCompatActivity {
         Log.d("DeleteNote", "insertIntent");
     }
 
+    private void saveDialog(){
+        SaveDialogFragment saveDialogFragment = new SaveDialogFragment();
+//        MyDialogFragment myDialogFragment = new MyDialogFragment();
+        FragmentManager manager = getSupportFragmentManager();
+        //myDialogFragment.show(manager, "dialog");
+
+        FragmentTransaction transaction = manager.beginTransaction();
+        saveDialogFragment.show(transaction, "dialog");
+    }
+
+
+
     @Override
     protected void onStop() {
         super.onStop();
@@ -345,9 +466,15 @@ public class EditNoteActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        saveChanges();
-        super.onBackPressed();
-        finish();
+        if (checkChanges()){
+            saveDialog();
+        }
+        else{
+            finish();
+        }
+//        saveChanges();
+//        super.onBackPressed();
+//        finish();
     }
 
     @Override

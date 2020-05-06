@@ -17,6 +17,8 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.os.Handler;
 
+import com.example.readingdiary.Fragments.DeleteDialogFragment;
+import com.example.readingdiary.Fragments.SetCoverDialogFragment;
 import com.example.readingdiary.R;
 import com.example.readingdiary.adapters.GaleryFullViewAdapter;
 import com.example.readingdiary.data.LiteratureContract;
@@ -29,7 +31,8 @@ import java.lang.Runnable;
 
 
 
-public class GaleryFullViewActivity extends AppCompatActivity {
+public class GaleryFullViewActivity extends AppCompatActivity implements DeleteDialogFragment.DeleteDialogListener,
+        SetCoverDialogFragment.SetCoverDialogListener {
     private RecyclerView galeryFullView;;
     int position;
     private GaleryFullViewAdapter adapter;
@@ -105,16 +108,9 @@ public class GaleryFullViewActivity extends AppCompatActivity {
             public void onClick(View v) {
                 File file = new File(names.get(position));
                 if (file.exists()){
-                    file.delete();
-                    names.remove(position);
-                    images.remove(position);
-                    adapter.notifyDataSetChanged();
-                    // Отмечаем, что список изображений был изменен - нужно для возвращаемого интента
-                    if (!changed){
-                        changed=true;
-                        setResultChanged();
-                    }
+                    dialogDeleteOpen();
                 }
+
             }
         });
 
@@ -122,24 +118,48 @@ public class GaleryFullViewActivity extends AppCompatActivity {
         coverButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                OpenHelper dbHelper = new OpenHelper(getApplicationContext());
-                SQLiteDatabase sdb = dbHelper.getReadableDatabase();
-                ContentValues cv = new ContentValues();
-                cv.put(LiteratureContract.NoteTable.COLUMN_COVER_IMAGE, names.get(position));
-                Log.d("IMAGE1", "!!! " + names.get(position));
-                sdb.update(LiteratureContract.NoteTable.TABLE_NAME, cv, LiteratureContract.NoteTable._ID + " = " + id, null);
-                Log.d("IMAGE1", "!!!end " + id);
+                dialogSetCoverOpen();
 
             }
         });
-
-
-
-
-
-
     }
 
+    @Override
+    public void onDeleteClicked() {
+        File file = new File(names.get(position));
+        if (file.exists()){
+            file.delete();
+            names.remove(position);
+            images.remove(position);
+            adapter.notifyDataSetChanged();
+            // Отмечаем, что список изображений был изменен - нужно для возвращаемого интента
+            if (!changed){
+                changed=true;
+                setResultChanged();
+            }
+        }
+    }
+
+    @Override
+    public void onSetCover() {
+        OpenHelper dbHelper = new OpenHelper(getApplicationContext());
+        SQLiteDatabase sdb = dbHelper.getReadableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put(LiteratureContract.NoteTable.COLUMN_COVER_IMAGE, names.get(position));
+        Log.d("IMAGE1", "!!! " + names.get(position));
+        sdb.update(LiteratureContract.NoteTable.TABLE_NAME, cv, LiteratureContract.NoteTable._ID + " = " + id, null);
+        Log.d("IMAGE1", "!!!end " + id);
+    }
+
+    private void dialogDeleteOpen(){
+        DeleteDialogFragment dialog = new DeleteDialogFragment();
+        dialog.show(getSupportFragmentManager(), "deleteDialog");
+    }
+
+    private void dialogSetCoverOpen(){
+        SetCoverDialogFragment dialog = new SetCoverDialogFragment();
+        dialog.show(getSupportFragmentManager(), "setCover");
+    }
 
     private void setResultChanged(){
         // создание возвращаемого интента
@@ -148,7 +168,6 @@ public class GaleryFullViewActivity extends AppCompatActivity {
         returnIntent.putExtra("changed", changed);
         setResult(RESULT_OK, returnIntent);
     }
-
 
 
     @Override

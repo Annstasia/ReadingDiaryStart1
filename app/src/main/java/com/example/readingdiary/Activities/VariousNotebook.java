@@ -20,10 +20,11 @@ import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.util.GregorianCalendar;
 
+import com.example.readingdiary.Fragments.SaveDialogFragment;
 import com.example.readingdiary.R;
 import com.google.android.material.textfield.TextInputEditText;
 
-public class VariousNotebook extends AppCompatActivity {
+public class VariousNotebook extends AppCompatActivity implements SaveDialogFragment.SaveDialogListener {
     private boolean shouldSave = true;
     private String id;
     private String type;
@@ -45,13 +46,18 @@ public class VariousNotebook extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        returnResult(saveText());
-        super.onBackPressed();
+        dialogSaveOpen();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+    }
+
+    @Override
+    public void onSaveClicked() {
+        returnResult(saveText());
+        super.onBackPressed();
     }
 
     private void openText() throws Exception{
@@ -99,5 +105,13 @@ public class VariousNotebook extends AppCompatActivity {
 
     }
 
+    private void dialogSaveOpen(){
+        SaveDialogFragment dialog = new SaveDialogFragment();
+        dialog.show(getSupportFragmentManager(), "saveNoteDialog");
+    }
 
+    @Override
+    public void onNotSaveClicked() {
+        finish();
+    }
 }
