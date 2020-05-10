@@ -13,43 +13,11 @@
 
         </include>
 
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_below="@id/appbarCatalog"
-        android:id="@+id/findLinearLayout"
-        >
-
-        <EditText
-            android:id="@+id/findText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:ems="10"
-            android:inputType="textPersonName"/>
-
-        <Button
-            android:id="@+id/findButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:text="Button" />
-    </LinearLayout>
-
-    <Spinner
-        android:id="@+id/spinnerSorts"
-        style="@android:style/Widget.Material.Spinner"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/findLinearLayout"
-        />
-
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/buttonViewCatalog"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/spinnerSorts"
+        android:layout_below="@id/appbarCatalog"
         />
 
 

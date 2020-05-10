@@ -40,7 +40,8 @@
             android:id="@+id/catalogNoteRatingView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="8dp"
+            android:layout_marginLeft="25dp"
+            android:layout_marginTop="15dp"
             android:numStars="5"
             style="@style/Widget.AppCompat.RatingBar.Small"/>
         <CheckBox

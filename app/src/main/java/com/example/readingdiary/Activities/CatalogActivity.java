@@ -4,6 +4,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -33,6 +35,7 @@ import com.example.readingdiary.Classes.DeleteFilesClass;
 import com.example.readingdiary.Classes.Directory;
 import com.example.readingdiary.Classes.Note;
 import com.example.readingdiary.Classes.RealNote;
+import com.example.readingdiary.Fragments.SortDialogFragment;
 import com.example.readingdiary.R;
 import com.example.readingdiary.adapters.CatalogButtonAdapter;
 import com.example.readingdiary.adapters.CatalogSortsSpinnerAdapter;
@@ -47,7 +50,7 @@ import java.io.File;
 import java.util.ArrayList;
 
 
-public class CatalogActivity extends AppCompatActivity {
+public class CatalogActivity extends AppCompatActivity implements SortDialogFragment.SortDialogListener {
     // класс отвечает за активность с каталогами
     OpenHelper dbHelper;
     RecyclerViewAdapter mAdapter;
@@ -61,6 +64,7 @@ public class CatalogActivity extends AppCompatActivity {
     CatalogButtonAdapter buttonAdapter;
     CatalogSortsSpinnerAdapter sortsAdapter;
     Button findButton;
+    EditText findText1;
     EditText findText;
     ArrayList<String> sortsList;
     Spinner sortsSpinner;
@@ -74,8 +78,15 @@ public class CatalogActivity extends AppCompatActivity {
     int CREATE_NOTE_REQUEST_CODE = 12346;
     public boolean action_mode = false;
     int count=0;
+    int menuType = 0;
     ArrayList<RealNote> selectionRealNotesList = new ArrayList<>();
     ArrayList<Directory> selectionDirectoriesList = new ArrayList<>();
+    String[] choices = new String[]{"Сортировка по названиям в лексикографическом порядке",
+            "Сортировка по названиям в обратном лексикографическим порядке",
+            "Сортировка по автору в лексиграфическом порядке",
+            "Сортировка по автору в обратном лексиграфическим порядке",
+            "Сортировка по возрастанию рейтинга",
+            "Сортировка по убыванию рейтинга"};
 
 
     @Override
@@ -111,9 +122,12 @@ public class CatalogActivity extends AppCompatActivity {
         sdb = dbHelper.getReadableDatabase();
         notes = new ArrayList<Note>(); // список того, что будет отображаться в каталоге.
         buttons = new ArrayList<String>(); // Список пройденный каталогов до текущего
-        initSortsList();
+        setSortTitles();
+//        initSortsList();
         findViews();
         setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
         counterText.setText("Каталог");
 //        toolbar.inflateMenu(R.menu.menu_catalog);
 
@@ -137,43 +151,7 @@ public class CatalogActivity extends AppCompatActivity {
 
             }
         });
-
-        findButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                notes.clear();
-//                buttons.clear();
-                selectTitle(findText.getText().toString());
-                mAdapter.notifyDataSetChanged();
-//                buttonAdapter.notifyDataSetChanged();
-            }
-        });
-
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
-//        findText.setCursorVisible(false);
-//        findText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-//            @Override
-//            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-//                findText.setCursorVisible(false);
-//                Log.d("EVENT1", event.toString());
-//                return false;
-//            }
-//        });
-
-        findText.setCursorVisible(false);
-        findText.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (event.getAction() == MotionEvent.ACTION_UP){
-                    findText.setCursorVisible(true);
-                }
-                return false;
-            }
-        });
-
-
-
-
     }
 
     @Override
@@ -182,8 +160,6 @@ public class CatalogActivity extends AppCompatActivity {
 //            getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
             InputMethodManager imm = (InputMethodManager) getSystemService(getApplicationContext().INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(getWindow().getDecorView().getWindowToken(), 0);
-            findText.clearFocus();
-            findText.setCursorVisible(false);
         }
         return super.dispatchTouchEvent(event);
     }
@@ -250,11 +226,75 @@ public class CatalogActivity extends AppCompatActivity {
             toolbar.getMenu().clear();
             toolbar.inflateMenu(R.menu.menu_catalog);
             getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+            menuType = 0;
             counterText.setText("Каталог");
             count=0;
 //            selectionList.clear();
 
 
+        }
+        if (item.getItemId() == R.id.item_search){
+            counterText.setVisibility(View.GONE);
+            findText1.setVisibility(View.VISIBLE);
+            toolbar.getMenu().clear();
+            toolbar.inflateMenu(R.menu.menu_search);
+//            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setDisplayShowHomeEnabled(true);
+            menuType = 2;
+
+        }
+        if (item.getItemId() == R.id.item_search1){
+//            counterText.setVisibility(View.VISIBLE);
+//            findText1.setVisibility(View.GONE);
+//            toolbar.getMenu().clear();
+//            toolbar.inflateMenu(R.menu.menu_catalog);
+            notes.clear();
+//                buttons.clear();
+            selectTitle(findText1.getText().toString());
+            mAdapter.notifyDataSetChanged();
+            findText1.clearComposingText();
+            counterText.setVisibility(View.VISIBLE);
+            findText1.setVisibility(View.GONE);
+            toolbar.getMenu().clear();
+            toolbar.inflateMenu(R.menu.menu_catalog);
+            menuType = 0;
+//            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        }
+
+        if (item.getItemId() == R.id.item_sort){
+            SortDialogFragment sortDialogFragment = new SortDialogFragment(choices);
+//            SaveDialogFragment saveDialogFragment = new SaveDialogFragment();
+            FragmentManager manager = getSupportFragmentManager();
+            //myDialogFragment.show(manager, "dialog");
+
+            FragmentTransaction transaction = manager.beginTransaction();
+            sortDialogFragment.show(transaction, "dialog");
+        }
+
+        if (item.getItemId() == android.R.id.home){
+            if (menuType==0){
+                finish();
+            }
+            else if (menuType == 1){
+                action_mode=false;
+                mAdapter.setActionMode(false);
+                mAdapter.notifyDataSetChanged();
+                toolbar.getMenu().clear();
+                toolbar.inflateMenu(R.menu.menu_catalog);
+                getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+                menuType = 0;
+                counterText.setText("Каталог");
+                count=0;
+            }
+            else if (menuType==2){
+                findText1.clearComposingText();
+                counterText.setVisibility(View.VISIBLE);
+                findText1.setVisibility(View.GONE);
+                toolbar.getMenu().clear();
+                toolbar.inflateMenu(R.menu.menu_catalog);
+                menuType = 0;
+            }
         }
         return super.onOptionsItemSelected(item);
     }
@@ -288,6 +328,13 @@ public class CatalogActivity extends AppCompatActivity {
         selectionDirectoriesList.clear();
 
     }
+
+    @Override
+    public void onSortClick(int position) {
+        Log.d("strangeSort", choices[position]);
+        startSort(choices[position]);
+    }
+
 
     public void deleteDirectory(String path){
         String[] projection1 = {
@@ -423,7 +470,7 @@ public class CatalogActivity extends AppCompatActivity {
                 new String[] {parent},
                 null,
                 null,
-                null);
+                NoteTable.COLUMN_TITLE);
         int idColumnIndex = cursor.getColumnIndex(NoteTable._ID);
         int pathColumnIndex = cursor.getColumnIndex(NoteTable.COLUMN_PATH);
         int authorColumnIndex = cursor.getColumnIndex(NoteTable.COLUMN_AUTHOR);
@@ -521,16 +568,16 @@ public class CatalogActivity extends AppCompatActivity {
         sortRating2 = "Сортировка по убыванию рейтинга";
     }
 
-    private void initSortsList(){
-        sortsList = new ArrayList<>();
-        sortsList.add("");
-        sortsList.add("Сортировка по названиям в лексикографическом порядке");
-        sortsList.add("Сортировка по названиям в обратном лексикографическим порядке");
-        sortsList.add("Сортировка по автору в лексиграфическом порядке");
-        sortsList.add("Сортировка по автору в обратном лексиграфическим порядке");
-        sortsList.add("Сортировка по возрастанию рейтинга");
-        sortsList.add("Сортировка по убыванию рейтинга");
-    }
+//    private void initSortsList(){
+//        sortsList = new ArrayList<>();
+//        sortsList.add("");
+//        sortsList.add("Сортировка по названиям в лексикографическом порядке");
+//        sortsList.add("Сортировка по названиям в обратном лексикографическим порядке");
+//        sortsList.add("Сортировка по автору в лексиграфическом порядке");
+//        sortsList.add("Сортировка по автору в обратном лексиграфическим порядке");
+//        sortsList.add("Сортировка по возрастанию рейтинга");
+//        sortsList.add("Сортировка по убыванию рейтинга");
+//    }
 
     private void reloadRecyclerView(){
         // перезагрузка recyclerView. Удаляются все элементы notes, выбираются новые из бд
@@ -562,11 +609,12 @@ public class CatalogActivity extends AppCompatActivity {
     private void findViews(){
         recyclerView = (RecyclerView) findViewById(R.id.recyclerViewCatalog);  // здесь будут отображаться каталоги и файлы notes
         buttonView = (RecyclerView) findViewById(R.id.buttonViewCatalog);  // здесь будут отображаться пройденные поддиректории buttons
-        sortsSpinner = (Spinner) findViewById(R.id.spinnerSorts);
+//        sortsSpinner = (Spinner) findViewById(R.id.spinnerSorts);
         toolbar = (MaterialToolbar) findViewById(R.id.long_click_toolbar);
-        findButton = (Button) findViewById(R.id.findButton);
-        findText = (EditText) findViewById(R.id.findText);
+//        findButton = (Button) findViewById(R.id.findButton);
+//        findText = (EditText) findViewById(R.id.findText);
         counterText = (TextView) findViewById(R.id.counter_text);
+        findText1 = (EditText) findViewById(R.id.editTextFind);
     }
 
     private void setAdapters(){
@@ -609,6 +657,7 @@ public class CatalogActivity extends AppCompatActivity {
                 counterText.setText(count + " элементов выбрано");
                 toolbar.getMenu().clear();
                 toolbar.inflateMenu(R.menu.menu_long_click);
+                menuType=1;
 //                toolbar.setMenu(m);
                 mAdapter.notifyDataSetChanged();
                 getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -663,22 +712,22 @@ public class CatalogActivity extends AppCompatActivity {
                 reloadRecyclerView();
             }
         });
-
-        sortsAdapter = new CatalogSortsSpinnerAdapter(this, sortsList);
-        sortsSpinner.setAdapter(sortsAdapter);
-        sortsSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                String clickedItem = (String) parent.getItemAtPosition(position);
-                startSort(clickedItem);
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
-        });
+//
+//        sortsAdapter = new CatalogSortsSpinnerAdapter(this, sortsList);
+//        sortsSpinner.setAdapter(sortsAdapter);
+//        sortsSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+//            @Override
+//            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+//                String clickedItem = (String) parent.getItemAtPosition(position);
+//                startSort(clickedItem);
+//            }
+//
+//            @Override
+//            public void onNothingSelected(AdapterView<?> parent) {
+//            }
+//        });
     }
-    
+//
 
     private void startSort(String sortType) {
         if (sortType.equals(sortTitles1)){

@@ -29,6 +29,8 @@ public class VariousNotebook extends AppCompatActivity implements SaveDialogFrag
     private String id;
     private String type;
     private TextInputEditText text;
+    private String path;
+    private String position;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +44,16 @@ public class VariousNotebook extends AppCompatActivity implements SaveDialogFrag
             textView12.setText("Описание");
         }
         text = (TextInputEditText) findViewById(R.id.editTextComments);
+        if (args.get("path") != null){
+            path = args.get("path").toString();
+            try{
+                openText();
+                position= args.get("position").toString();
+            }
+            catch (Exception e){
+                Log.e("openTextException", e.toString());
+            }
+        }
     }
 
     @Override
@@ -61,9 +73,10 @@ public class VariousNotebook extends AppCompatActivity implements SaveDialogFrag
     }
 
     private void openText() throws Exception{
-        File fileDir1 = getApplicationContext().getDir(type, MODE_PRIVATE);
-        if (!fileDir1.exists()) fileDir1.mkdirs();
-        File file = new File(fileDir1, id+".txt");
+//        File fileDir1 = getApplicationContext().getDir(type, MODE_PRIVATE);
+//        if (!fileDir1.exists()) fileDir1.mkdirs();
+//        File file = new File(fileDir1, id+".txt");
+        File file = new File(path);
         if (!file.exists()) file.createNewFile();
         BufferedReader br = new BufferedReader(new FileReader(file));
         StringBuilder str = new StringBuilder();
@@ -79,15 +92,31 @@ public class VariousNotebook extends AppCompatActivity implements SaveDialogFrag
     private long saveText(){
 
         try{
-            File fileDir1 = getApplicationContext().getDir(type + File.pathSeparator + id, MODE_PRIVATE);
-            if (!fileDir1.exists()) fileDir1.mkdirs();
-            long time = new GregorianCalendar().getTimeInMillis();
-            File file = new File(fileDir1, time+".txt");
-            if (!file.exists()) file.createNewFile();
-            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file)));
-            bw.write(text.getText().toString());
-            bw.close();
-            return time;
+            File file;
+            if (path==null){
+                File fileDir1 = getApplicationContext().getDir(type + File.pathSeparator + id, MODE_PRIVATE);
+                if (!fileDir1.exists()) fileDir1.mkdirs();
+                long time = new GregorianCalendar().getTimeInMillis();
+                file = new File(fileDir1, time+".txt");
+                if (!file.exists()) file.createNewFile();
+                BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file)));
+                bw.write(text.getText().toString());
+                bw.close();
+                return time;
+            }
+            else{
+                file = new File(path);
+                if (!file.exists()) file.createNewFile();
+                BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file)));
+                bw.write(text.getText().toString());
+                bw.close();
+                return -2;
+            }
+//            if (!file.exists()) file.createNewFile();
+//            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file)));
+//            bw.write(text.getText().toString());
+//            bw.close();
+//            return time;
 
 
         }
@@ -100,7 +129,13 @@ public class VariousNotebook extends AppCompatActivity implements SaveDialogFrag
     private void returnResult(long time){
         if (time == -1) return;
         Intent resultIntent = new Intent();
-        resultIntent.putExtra("time", time+"");
+        if (time == -2) {
+            resultIntent.putExtra("updatePath", path);
+            resultIntent.putExtra("position", position);
+        }
+        else{
+            resultIntent.putExtra("time", time+"");
+        }
         setResult(RESULT_OK, resultIntent);
 
     }
